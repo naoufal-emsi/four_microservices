@@ -1,0 +1,12 @@
+com/medical/dossiers/web/DossierMedicalController.class
+com/medical/dossiers/web/CompteRenduController.class
+com/medical/dossiers/config/AppConfig.class
+com/medical/dossiers/model/CompteRendu.class
+com/medical/dossiers/repository/CompteRenduRepository.class
+com/medical/dossiers/repository/DossierMedicalRepository.class
+com/medical/dossiers/DossiersServiceApplication.class
+com/medical/dossiers/service/CompteRenduService.class
+com/medical/dossiers/model/CompteRendu$StatutCompteRendu.class
+com/medical/dossiers/model/DossierMedical.class
+com/medical/dossiers/service/DossierMedicalService.class
+com/medical/dossiers/client/MicroserviceClient.class

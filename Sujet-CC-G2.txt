@@ -1,0 +1,98 @@
+﻿Contrôle continu - Module Systèmes Distribués
+Sujet du projet 
+Conception et développement d’un système distribué de gestion des rendez-vous médicaux
+basé sur une architecture microservices
+N.B. : l’énoncé contient le minimum à réaliser. Chaque groupe peut enrichir son projet et proposer des améliorations supplémentaires.
+Date Soutenance : 20/04/2026 
+
+1. Contexte
+Dans un environnement médical, la gestion des rendez-vous ne se limite pas à fixer une date. Elle implique plusieurs opérations liées entre elles : l’enregistrement des patients, la gestion des médecins, l’organisation des créneaux, la réservation, l’annulation, la notification des actions importantes et la conservation d’un historique. Dans la réalité, ces traitements ne sont pas toujours centralisés dans un seul bloc applicatif. Ils peuvent être répartis entre plusieurs services spécialisés qui coopèrent pour assurer le fonctionnement global du système.
+Objectif du projet
+Le projet consiste à concevoir et développer, en groupe de 5 étudiants, un système distribué de gestion des rendez-vous médicaux basé sur une architecture microservices. Chaque étudiant devra prendre en charge un microservice distinct, avec ses propres données, ses propres endpoints et ses propres traitements. Les microservices ne doivent pas fonctionner de manière isolée : ils doivent réellement communiquer entre eux afin de répondre aux besoins du système complet.
+Attentes minimales
+Le système réalisé doit au minimum permettre l’enregistrement des patients et des médecins, la création des créneaux de consultation, la prise d’un rendez-vous lorsque toutes les conditions sont satisfaites, le blocage d’un créneau après réservation, l’annulation d’un rendez-vous avec libération du créneau, ainsi que la conservation d’un historique des actions importantes. Une attention particulière sera portée à la cohérence des données et à la qualité des échanges entre les microservices.
+Architecture fonctionnelle proposée
+Le découpage suivant est proposé afin d’assurer une répartition claire du travail entre les membres du groupe, tout en garantissant une vraie communication entre les services.
+Microservice	Fonction principale	Base de données propre	Communication attendue
+Patients	Gérer les informations des patients	Patients	Validation de l’existence du patient pour la réservation et enrichissement éventuel des notifications
+Médecins	Gérer les médecins et leurs spécialités	Médecins, spécialités	Validation du médecin et consultation des informations utiles au rendez-vous
+Planning	Gérer les créneaux et les disponibilités	Créneaux, disponibilités	Vérification, blocage et libération des créneaux
+Rendez-vous	Créer, consulter, modifier et annuler les rendez-vous	Rendez-vous	Coordination avec Patients, Médecins, Planning et Notifications
+Notifications et historique	Conserver les traces et notifier les événements	Notifications, historique	Réception des événements provenant des autres microservices
+1 Microservice Patients
+Fonctionnalités minimales :
+• ajouter un patient
+• consulter la liste des patients
+• consulter le détail d’un patient
+• modifier les informations d’un patient
+• rechercher un patient par identifiant
+Communication attendue : Il sera utilisé par le microservice Rendez-vous pour vérifier l’existence du patient avant toute réservation. Il pourra aussi être interrogé par le microservice Notifications et historique afin d’enrichir certaines traces.
+2 Microservice Médecins
+Fonctionnalités minimales :
+• ajouter un médecin
+• consulter la liste des médecins
+• consulter le détail d’un médecin
+• gérer la spécialité du médecin
+• vérifier la disponibilité générale d’un médecin
+Communication attendue : Il sera utilisé par le microservice Rendez-vous pour vérifier l’existence du médecin et par le microservice Planning pour l’organisation des créneaux.
+3 Microservice Planning
+Fonctionnalités minimales :
+• créer des créneaux horaires
+• consulter les créneaux disponibles
+• bloquer un créneau réservé
+• libérer un créneau en cas d’annulation
+• consulter le planning d’un médecin
+Communication attendue : Il sera utilisé par le microservice Rendez-vous pour vérifier si un créneau est libre, puis pour le bloquer ou le libérer selon le cas.
+4 Microservice Rendez-vous
+Fonctionnalités minimales :
+• créer un rendez-vous
+• consulter les rendez-vous
+• consulter le détail d’un rendez-vous
+• annuler un rendez-vous
+• modifier l’état d’un rendez-vous
+Communication attendue : Ce microservice coordonne les vérifications auprès des services Patients, Médecins et Planning. Il doit aussi transmettre les événements importants au microservice Notifications et historique.
+5 Microservice Notifications et historique
+Fonctionnalités minimales :
+• enregistrer l’historique des actions importantes
+• notifier la création d’un rendez-vous
+• notifier l’annulation d’un rendez-vous
+• notifier la modification d’état
+• consulter l’historique global ou celui d’un rendez-vous
+Communication attendue : Il reçoit les événements envoyés par les autres microservices et conserve une trace exploitable des principales opérations réalisées dans le système.
+6/Microservice Dossiers médicaux / comptes rendus
+Rôle
+Ce microservice permet de conserver une trace médicale simple liée aux rendez-vous réalisés.
+Fonctionnalités minimales
+    • Créer un compte rendu après un rendez-vous 
+    • Consulter les comptes rendus d’un patient 
+    • Consulter le détail d’un compte rendu 
+    • Associer un compte rendu à un rendez-vous 
+    • Enregistrer une remarque ou une observation médicale simple 
+Base de données propre
+Dossiers médicaux et comptes rendus.
+Communication attendue
+    • Interroger le microservice Patients pour vérifier l’existence du patient 
+    • Interroger le microservice Rendez-vous pour vérifier qu’un rendez-vous existe 
+    • Éventuellement interroger le microservice Médecins pour récupérer les informations du médecin ayant assuré la consultation 
+    • Envoyer un événement au microservice Notifications et historique
+Contraintes d’architecture
+• Chaque microservice doit disposer de sa propre base de données. Il est interdit de partager une seule base de données entre tous les microservices.
+• Un microservice ne doit jamais accéder directement aux tables d’un autre microservice. Toute communication doit passer par les API exposées.
+• Le projet doit montrer une intégration réelle entre les services. Il ne s’agit pas de remettre cinq applications séparées, mais une seule architecture distribuée cohérente.
+Technologies conseillées
+Vous pouvez vous appuyer sur les technologies déjà manipulées en travaux pratiques, notamment Java 17, Spring Boot, Maven, les API REST, IntelliJ et Postman. Vous pouvez également utiliser Spring Data JPA / Hibernate, MySQL ou PostgreSQL, Docker, Apache Kafka, OpenAPI / Swagger, des outils de monitoring ou encore Spring Cloud selon le niveau d’enrichissement que vous souhaitez apporter au projet.
+Extensions optionnelles
+Les groupes qui souhaitent aller plus loin peuvent enrichir leur projet par une interface web, un tableau de bord, une conteneurisation, un mécanisme d’échange asynchrone, ou une amélioration inspirée du cloud computing ou de l’intelligence artificielle. Ces éléments ne sont pas obligatoires, mais ils pourront valoriser la qualité du travail réalisé.
+Livrables demandés
+    1. Un cahier des charges du projet
+    2. Une présentation powerpoint de 5 à 7 minutes
+    3. Une description claire de l’architecture globale
+    4. Un schéma des microservices
+    5. La description des bases de données de chaque microservice
+    6. La liste des api exposées
+    7. Le code source du projet
+    8. Un scénario de démonstration
+    9. Une répartition claire du travail entre les membres du groupe
+
+Remarque importante : l’objectif de ce projet n’est pas seulement de développer cinq microservices séparés. Le plus important est de montrer votre capacité à construire ensemble un vrai système distribué, dans lequel chaque microservice a une utilité claire, des données propres et une communication réelle avec les autres services.
+
