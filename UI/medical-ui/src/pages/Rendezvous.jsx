@@ -198,21 +198,34 @@ export default function Rendezvous() {
             </div>
             <div className="form-group">
               <label>Médecin *</label>
-              <select required value={form.medecinId} onChange={e => setForm({...form, medecinId: e.target.value})}>
+              <select required value={form.medecinId} onChange={e => setForm({...form, medecinId: e.target.value, creneauId: ''})}>
                 <option value="">— Sélectionner un médecin —</option>
                 {medecins.map(m => <option key={m.id} value={m.id}>Dr. {m.prenom} {m.nom}{m.specialite ? ` — ${m.specialite.nom}` : ''}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label>Créneau disponible *</label>
-              <select required value={form.creneauId} onChange={e => setForm({...form, creneauId: e.target.value})}>
-                <option value="">— Sélectionner un créneau —</option>
-                {creneaux.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.date} — {c.heureDebut?.slice(0,5)} à {c.heureFin?.slice(0,5)} (Médecin #{c.medecinId})
-                  </option>
-                ))}
-              </select>
+              {!form.medecinId ? (
+                <div style={{ padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: '0.875rem', color: '#94a3b8', background: '#f8fafc' }}>
+                  ⚠️ Sélectionnez d'abord un médecin
+                </div>
+              ) : (() => {
+                const creneauxMedecin = creneaux.filter(c => String(c.medecinId) === String(form.medecinId));
+                return creneauxMedecin.length === 0 ? (
+                  <div style={{ padding: '10px 14px', border: '1.5px solid #fecaca', borderRadius: 10, fontSize: '0.875rem', color: '#991b1b', background: '#fef2f2' }}>
+                    ❌ Aucun créneau disponible pour ce médecin
+                  </div>
+                ) : (
+                  <select required value={form.creneauId} onChange={e => setForm({...form, creneauId: e.target.value})}>
+                    <option value="">— Sélectionner un créneau —</option>
+                    {creneauxMedecin.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.date} — {c.heureDebut?.slice(0,5)} à {c.heureFin?.slice(0,5)}
+                      </option>
+                    ))}
+                  </select>
+                );
+              })()}
             </div>
             <div className="form-group"><label>Motif</label><input value={form.motif} onChange={e => setForm({...form, motif: e.target.value})} placeholder="Consultation générale..." /></div>
             <div className="form-group"><label>Notes</label><textarea rows={3} value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Notes additionnelles..." /></div>
