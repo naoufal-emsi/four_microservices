@@ -52,6 +52,11 @@ public class RendezvousController {
         return service.trouverParMedecin(medecinId);
     }
 
+    @GetMapping("/compte/medecin/{medecinId}")
+    public int compterParMedecin(@PathVariable Long medecinId) {
+        return service.trouverParMedecin(medecinId).size();
+    }
+
     @PutMapping("/{id}/statut")
     public ResponseEntity<?> changerStatut(@PathVariable Long id,
                                            @RequestBody Map<String, String> body) {
