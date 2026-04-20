@@ -96,6 +96,7 @@ export default function Patients() {
     setEditing(p.id); setModal(true);
   }
 
+  const f = v => v || '—';
   const statutBadge = s => {
     const u = s?.toUpperCase();
     if (u === 'ACTIF') return 'badge-green';
@@ -218,36 +219,57 @@ export default function Patients() {
         </Modal>
       )}
 
-      {decisionModal && (
-        <Modal title={`🤖 Décision IA — ${decisionModal.patient.prenom} ${decisionModal.patient.nom}`} onClose={() => setDecisionModal(null)}
-          footer={<button className="btn btn-ghost" onClick={() => setDecisionModal(null)}>Fermer</button>}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ background: '#ede9fe', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#5b21b6', marginBottom: 4 }}>Décision</div>
-              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>{decisionModal.data.decision}</div>
-            </div>
-            <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#065f46', marginBottom: 4 }}>Raison principale</div>
-              <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>{decisionModal.data.raisonPrincipale}</div>
-            </div>
-            {decisionModal.data.risques?.length > 0 && (
-              <div style={{ background: '#fef2f2', borderRadius: 10, padding: '14px 16px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#991b1b', marginBottom: 8 }}>Risques identifiés</div>
-                {decisionModal.data.risques.map((r, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, fontSize: '0.875rem' }}>
-                    <span style={{ color: '#ef4444' }}>⚠️</span> {r}
-                  </div>
-                ))}
+      {decisionModal && (() => {
+        const d = decisionModal.data;
+        const configs = {
+          RESERVABLE:  { bg: '#d1fae5', color: '#065f46', icon: '✅', label: 'Réservable' },
+          A_VERIFIER:  { bg: '#fef3c7', color: '#92400e', icon: '⚠️', label: 'À vérifier' },
+          BLOQUE:      { bg: '#fee2e2', color: '#991b1b', icon: '🚫', label: 'Bloqué' },
+        };
+        const cfg = configs[d.decision] || { bg: '#f1f5f9', color: '#475569', icon: 'ℹ️', label: d.decision };
+        return (
+          <Modal title={`🤖 Décision IA — ${decisionModal.patient.prenom} ${decisionModal.patient.nom}`} onClose={() => setDecisionModal(null)}
+            footer={<button className="btn btn-ghost" onClick={() => setDecisionModal(null)}>Fermer</button>}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ background: cfg.bg, borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span style={{ fontSize: '2rem' }}>{cfg.icon}</span>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '1.2rem', color: cfg.color }}>{cfg.label}</div>
+                  <div style={{ fontSize: '0.8rem', color: cfg.color, opacity: 0.8, marginTop: 2 }}>{d.decision}</div>
+                </div>
               </div>
-            )}
-            <div style={{ background: '#eff6ff', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#1e40af', marginBottom: 4 }}>Action recommandée</div>
-              <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>{decisionModal.data.actionRecommandee}</div>
+              <div style={{ background: '#f8fafc', borderRadius: 10, padding: '12px 16px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 }}>Raison principale</div>
+                <div style={{ fontSize: '0.9rem', color: '#1e293b', fontWeight: 500 }}>{d.raisonPrincipale}</div>
+              </div>
+              {d.risques?.length > 0 && (
+                <div style={{ background: '#fef2f2', borderRadius: 10, padding: '12px 16px', border: '1px solid #fecaca' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#991b1b', marginBottom: 8 }}>Risques identifiés</div>
+                  {d.risques.map((r, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, fontSize: '0.875rem', color: '#7f1d1d' }}>
+                      <span>⚠️</span> {r}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {d.risques?.length === 0 && (
+                <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '10px 16px', border: '1px solid #bbf7d0', fontSize: '0.875rem', color: '#065f46' }}>
+                  ✅ Aucun risque identifié
+                </div>
+              )}
+              <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 16px', border: '1px solid #bfdbfe' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#1e40af', marginBottom: 4 }}>Action recommandée</div>
+                <div style={{ fontSize: '0.875rem', color: '#1e293b' }}>{d.actionRecommandee}</div>
+              </div>
+              <details>
+                <summary style={{ cursor: 'pointer', fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, userSelect: 'none' }}>Résultat JSON brut</summary>
+                <pre style={{ background: '#0f172a', color: '#e2e8f0', padding: 14, borderRadius: 10, fontSize: '0.78rem', overflowX: 'auto', whiteSpace: 'pre-wrap', marginTop: 8 }}>{JSON.stringify(d, null, 2)}</pre>
+              </details>
             </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
       {configModal && (
         <Modal title="🔗 Configuration externe" onClose={() => setConfigModal(null)}
           footer={<button className="btn btn-ghost" onClick={() => setConfigModal(null)}>Fermer</button>}
