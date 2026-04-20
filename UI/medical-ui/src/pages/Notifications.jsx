@@ -6,11 +6,18 @@ import { useToast, ToastContainer } from '../hooks/useToast';
 
 const TYPE_BADGE = {
   CREATE: 'badge-green', CANCEL: 'badge-red', UPDATE: 'badge-blue',
-  RDV_CREE: 'badge-green', RDV_ANNULE: 'badge-red', RDV_STATUT_CHANGE: 'badge-blue'
+  RDV_CREE: 'badge-green', RDV_ANNULE: 'badge-red',
+  RDV_STATUT_CHANGE: 'badge-blue', RDV_NOTES_MODIFIEES: 'badge-purple'
 };
 const TYPE_ICON = {
   CREATE: '📅', CANCEL: '❌', UPDATE: '🔄',
-  RDV_CREE: '📅', RDV_ANNULE: '❌', RDV_STATUT_CHANGE: '🔄'
+  RDV_CREE: '📅', RDV_ANNULE: '❌',
+  RDV_STATUT_CHANGE: '🔄', RDV_NOTES_MODIFIEES: '📝'
+};
+const TYPE_LABEL = {
+  RDV_CREE: 'Création', RDV_ANNULE: 'Annulation',
+  RDV_STATUT_CHANGE: 'Changement statut', RDV_NOTES_MODIFIEES: 'Notes modifiées',
+  CREATE: 'Création', CANCEL: 'Annulation', UPDATE: 'Mise à jour'
 };
 
 export default function Notifications() {
@@ -127,9 +134,9 @@ export default function Notifications() {
 
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon purple">🔔</div><div className="stat-info"><div className="stat-number">{notifs.length}</div><div className="stat-label">Notifications</div></div></div>
-        <div className="stat-card"><div className="stat-icon green">📅</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'CREATE').length}</div><div className="stat-label">Créations</div></div></div>
-        <div className="stat-card"><div className="stat-icon red">❌</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'CANCEL').length}</div><div className="stat-label">Annulations</div></div></div>
-        <div className="stat-card"><div className="stat-icon blue">🔄</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'UPDATE').length}</div><div className="stat-label">Mises à jour</div></div></div>
+        <div className="stat-card"><div className="stat-icon green">📅</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'CREATE' || n.type === 'RDV_CREE').length}</div><div className="stat-label">Créations</div></div></div>
+        <div className="stat-card"><div className="stat-icon red">❌</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'CANCEL' || n.type === 'RDV_ANNULE').length}</div><div className="stat-label">Annulations</div></div></div>
+        <div className="stat-card"><div className="stat-icon blue">🔄</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'UPDATE' || n.type === 'RDV_STATUT_CHANGE' || n.type === 'RDV_NOTES_MODIFIEES').length}</div><div className="stat-label">Mises à jour</div></div></div>
       </div>
 
       {/* Search by reference */}
@@ -181,7 +188,7 @@ export default function Notifications() {
                 {filtered.map((n, i) => (
                   <tr key={n.id || i}>
                     <td className="td-id">#{n.id}</td>
-                    <td><span className={`badge ${TYPE_BADGE[n.type] || 'badge-gray'}`}>{TYPE_ICON[n.type] || '📌'} {n.type}</span></td>
+                    <td><span className={`badge ${TYPE_BADGE[n.type] || 'badge-gray'}`}>{TYPE_ICON[n.type] || '📌'} {TYPE_LABEL[n.type] || n.type}</span></td>
                     <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</td>
                     <td>{n.rendezVousId ? <span className="badge badge-purple">#{n.rendezVousId}</span> : '—'}</td>
                     <td style={{ fontSize: '0.8rem', color: '#64748b', whiteSpace: 'nowrap' }}>{n.date ? new Date(n.date).toLocaleString('fr-FR') : '—'}</td>
@@ -197,7 +204,7 @@ export default function Notifications() {
                 {filtered.map((h, i) => (
                   <tr key={h.id || i}>
                     <td className="td-id">#{h.id}</td>
-                    <td><span className={`badge ${TYPE_BADGE[h.action] || 'badge-gray'}`}>{TYPE_ICON[h.action] || '📌'} {h.action}</span></td>
+                    <td><span className={`badge ${TYPE_BADGE[h.action] || 'badge-gray'}`}>{TYPE_ICON[h.action] || '📌'} {TYPE_LABEL[h.action] || h.action}</span></td>
                     <td>{h.rendezVousId ? <span className="badge badge-purple">#{h.rendezVousId}</span> : '—'}</td>
                     <td>{h.patientId ? <span className="badge badge-blue">#{h.patientId}</span> : '—'}</td>
                     <td style={{ fontSize: '0.8rem', color: '#64748b', whiteSpace: 'nowrap' }}>{h.date ? new Date(h.date).toLocaleString('fr-FR') : '—'}</td>

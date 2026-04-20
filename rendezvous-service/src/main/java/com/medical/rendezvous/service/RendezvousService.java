@@ -98,6 +98,9 @@ public class RendezvousService {
     public Rendezvous modifierNotes(Long id, String notes) {
         Rendezvous rdv = trouverParId(id);
         rdv.setNotes(notes);
-        return repository.save(rdv);
+        Rendezvous saved = repository.save(rdv);
+        client.envoyerNotification("RDV_NOTES_MODIFIEES",
+                "Notes du rendez-vous " + id + " mises à jour", id, rdv.getPatientId());
+        return saved;
     }
 }
