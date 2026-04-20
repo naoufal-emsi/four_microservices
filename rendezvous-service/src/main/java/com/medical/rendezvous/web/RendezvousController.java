@@ -57,6 +57,15 @@ public class RendezvousController {
         return service.trouverParMedecin(medecinId).size();
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> modifier(@PathVariable Long id, @RequestBody Rendezvous body) {
+        try {
+            return ResponseEntity.ok(service.modifier(id, body));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}/statut")
     public ResponseEntity<?> changerStatut(@PathVariable Long id,
                                            @RequestBody Map<String, String> body) {

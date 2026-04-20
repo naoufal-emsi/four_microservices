@@ -97,6 +97,19 @@ public class RendezvousService {
         return saved;
     }
 
+    public Rendezvous modifier(Long id, Rendezvous updates) {
+        Rendezvous rdv = trouverParId(id);
+        if (updates.getDateHeureRendezvous() != null) rdv.setDateHeureRendezvous(updates.getDateHeureRendezvous());
+        if (updates.getMotif() != null) rdv.setMotif(updates.getMotif());
+        if (updates.getNotes() != null) rdv.setNotes(updates.getNotes());
+        if (updates.getPatientId() != null) rdv.setPatientId(updates.getPatientId());
+        if (updates.getMedecinId() != null) rdv.setMedecinId(updates.getMedecinId());
+        Rendezvous saved = repository.save(rdv);
+        client.envoyerNotification("RDV_MODIFIE",
+                "Rendez-vous " + id + " modifié", id, rdv.getPatientId());
+        return saved;
+    }
+
     public Rendezvous modifierNotes(Long id, String notes) {
         Rendezvous rdv = trouverParId(id);
         rdv.setNotes(notes);

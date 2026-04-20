@@ -21,6 +21,8 @@ export default function Rendezvous() {
   const [statutModal, setStatutModal] = useState(null);
   const [notesModal, setNotesModal] = useState(null);
   const [form, setForm] = useState(EMPTY);
+  const [editModal, setEditModal] = useState(null);
+  const [editForm, setEditForm] = useState(EMPTY);
   const [newStatut, setNewStatut] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -79,6 +81,21 @@ export default function Rendezvous() {
       // refresh creneaux disponibles
       axios.get(apiPlan('/disponibles')).then(r => setCreneaux(Array.isArray(r.data) ? r.data : [])).catch(() => {});
     } catch (e) { toast(e.response?.data || 'Erreur lors de la création', 'error'); }
+    finally { setLoading(false); }
+  }
+
+  async function modifier() {
+    setLoading(true);
+    try {
+      await axios.put(api(`/${editModal.id}`), {
+        patientId: Number(editForm.patientId),
+        medecinId: Number(editForm.medecinId),
+        dateHeureRendezvous: editForm.dateHeureRendezvous ? editForm.dateHeureRendezvous + ':00' : editModal.dateHeureRendezvous,
+        motif: editForm.motif,
+        notes: editForm.notes,
+      });
+      toast('Rendez-vous modifié'); setEditModal(null); load();
+    } catch (e) { toast(e.response?.data || 'Erreur', 'error'); }
     finally { setLoading(false); }
   }
 
@@ -163,6 +180,7 @@ export default function Rendezvous() {
                     <td>
                       <div className="actions-cell">
                         <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(r)}>👁</button>
+                        <button className="btn btn-warning btn-sm" onClick={() => { setEditModal(r); setEditForm({ patientId: r.patientId, medecinId: r.medecinId, dateHeureRendezvous: r.dateHeureRendezvous?.slice(0,16), motif: r.motif||'', notes: r.notes||'' }); }}>✏️</button>
                         <button className="btn btn-info btn-sm" onClick={() => { setStatutModal(r.id); setNewStatut(r.statut); }}>🔄</button>
                         <button className="btn btn-success btn-sm" onClick={() => { setNotesModal(r); setNotes(r.notes||''); }}>📝</button>
                         {r.statut !== 'ANNULE' && r.statut !== 'TERMINE' && (
@@ -292,6 +310,38 @@ export default function Rendezvous() {
             <label>Notes médicales</label>
             <textarea rows={6} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Saisir les notes..." />
           </div>
+        </Modal>
+      )}
+      {/* Edit Modal */}
+      {editModal && (
+        <Modal title={`✏️ Modifier RDV #${editModal.id}`} onClose={() => setEditModal(null)}
+          footer={<>
+            <button className="btn btn-ghost" onClick={() => setEditModal(null)}>Annuler</button>
+            <button className="btn btn-primary" onClick={modifier} disabled={loading}>
+              {loading ? <span className="loading-spinner"/> : 'Enregistrer'}
+            </button>
+          </>}
+        >
+          <div className="form-group">
+            <label>Patient *</label>
+            <select value={editForm.patientId} onChange={e => setEditForm({...editForm, patientId: e.target.value})}>
+              <option value="">— Sélectionner un patient —</option>
+              {patients.map(p => <option key={p.id} value={p.id}>{p.prenom} {p.nom}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Médecin *</label>
+            <select value={editForm.medecinId} onChange={e => setEditForm({...editForm, medecinId: e.target.value})}>
+              <option value="">— Sélectionner un médecin —</option>
+              {medecins.map(m => <option key={m.id} value={m.id}>Dr. {m.prenom} {m.nom}{m.specialite ? ` — ${m.specialite.nom}` : ''}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Date & Heure *</label>
+            <input type="datetime-local" value={editForm.dateHeureRendezvous} onChange={e => setEditForm({...editForm, dateHeureRendezvous: e.target.value})} />
+          </div>
+          <div className="form-group"><label>Motif</label><input value={editForm.motif} onChange={e => setEditForm({...editForm, motif: e.target.value})} placeholder="Consultation générale..." /></div>
+          <div className="form-group"><label>Notes</label><textarea rows={3} value={editForm.notes} onChange={e => setEditForm({...editForm, notes: e.target.value})} placeholder="Notes additionnelles..." /></div>
         </Modal>
       )}
     </div>
