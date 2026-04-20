@@ -40,7 +40,7 @@ public class RendezvousService {
         client.bloquerCreneau(rdv.getCreneauId());
         client.envoyerNotification("RDV_CREE",
                 "Rendez-vous créé pour le patient " + rdv.getPatientId() + " avec le médecin " + rdv.getMedecinId(),
-                saved.getId());
+                saved.getId(), rdv.getPatientId());
 
         return saved;
     }
@@ -67,7 +67,7 @@ public class RendezvousService {
         rdv.setStatut(nouveauStatut);
         Rendezvous saved = repository.save(rdv);
         client.envoyerNotification("RDV_STATUT_CHANGE",
-                "Rendez-vous " + id + " passé au statut " + nouveauStatut, id);
+                "Rendez-vous " + id + " passé au statut " + nouveauStatut, id, null);
         return saved;
     }
 
@@ -81,7 +81,7 @@ public class RendezvousService {
 
         client.libererCreneau(rdv.getCreneauId());
         client.envoyerNotification("RDV_ANNULE",
-                "Rendez-vous " + id + " annulé, créneau " + rdv.getCreneauId() + " libéré", id);
+                "Rendez-vous " + id + " annulé, créneau " + rdv.getCreneauId() + " libéré", id, rdv.getPatientId());
 
         return saved;
     }

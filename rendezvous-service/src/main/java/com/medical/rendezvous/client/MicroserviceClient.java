@@ -75,14 +75,14 @@ public class MicroserviceClient {
         }
     }
 
-    public void envoyerNotification(String type, String message, Long referenceId) {
+    public void envoyerNotification(String type, String message, Long rendezVousId, Long patientId) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("type", type);
             payload.put("message", message);
-            payload.put("referenceId", referenceId);
-            payload.put("source", "rendezvous-service");
-            restTemplate.postForObject(notificationsUrl + "/api/notifications", payload, Object.class);
+            payload.put("rendezVousId", rendezVousId);
+            payload.put("patientId", patientId);
+            restTemplate.postForObject(notificationsUrl + "/notifications", payload, Object.class);
         } catch (Exception e) {
             System.err.println("[WARN] notifications-service unreachable: " + e.getMessage());
         }

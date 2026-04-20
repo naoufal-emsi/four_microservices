@@ -4,4 +4,5 @@
 /home/school/Documents/4.2/08-Systeme distribues au service de l'IA/CC/rendezvous-service/src/main/java/com/medical/rendezvous/model/Rendezvous.java
 /home/school/Documents/4.2/08-Systeme distribues au service de l'IA/CC/rendezvous-service/src/main/java/com/medical/rendezvous/repository/RendezvousRepository.java
 /home/school/Documents/4.2/08-Systeme distribues au service de l'IA/CC/rendezvous-service/src/main/java/com/medical/rendezvous/service/RendezvousService.java
+/home/school/Documents/4.2/08-Systeme distribues au service de l'IA/CC/rendezvous-service/src/main/java/com/medical/rendezvous/web/PingController.java
 /home/school/Documents/4.2/08-Systeme distribues au service de l'IA/CC/rendezvous-service/src/main/java/com/medical/rendezvous/web/RendezvousController.java

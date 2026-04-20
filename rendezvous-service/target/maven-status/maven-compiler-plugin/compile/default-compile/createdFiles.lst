@@ -1,8 +1,10 @@
 com/medical/rendezvous/config/AppConfig.class
 com/medical/rendezvous/client/MicroserviceClient.class
 com/medical/rendezvous/repository/RendezvousRepository.class
+com/medical/rendezvous/web/PingController.class
 com/medical/rendezvous/RendezvousServiceApplication.class
 com/medical/rendezvous/web/RendezvousController.class
 com/medical/rendezvous/service/RendezvousService.class
 com/medical/rendezvous/model/Rendezvous$StatutRendezvous.class
 com/medical/rendezvous/model/Rendezvous.class
+com/medical/rendezvous/config/AppConfig$1.class

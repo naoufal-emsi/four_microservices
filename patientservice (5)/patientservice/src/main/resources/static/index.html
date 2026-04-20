@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Microservice Patients</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f7fb;
+            color: #1f2937;
+        }
+
+        h1, h2 {
+            color: #1d4ed8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            min-width: 180px;
+            flex: 1;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #16a34a;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-info {
+            background: #0891b2;
+        }
+
+        .btn-info:hover {
+            background: #0e7490;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .small-box {
+            background: #eff6ff;
+            padding: 12px;
+            border-left: 4px solid #2563eb;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .status-actif {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .status-doublon {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .status-incomplet {
+            color: #d97706;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>Interface Microservice Patients</h1>
+    <p>CRUD + Auto-stabilisation + Configuration externe + Décision métier</p>
+
+    <div class="card">
+        <h2>Ajouter un patient</h2>
+        <div class="row">
+            <input type="text" id="nom" placeholder="Nom">
+            <input type="text" id="prenom" placeholder="Prénom">
+            <input type="text" id="telephone" placeholder="Téléphone">
+            <input type="email" id="email" placeholder="Email">
+            <input type="text" id="adresse" placeholder="Adresse">
+            <input type="text" id="statut" placeholder="Statut (optionnel)">
+        </div>
+        <div style="margin-top: 12px;">
+            <button class="btn-success" onclick="ajouterPatient()">Ajouter</button>
+            <button class="btn-secondary" onclick="viderFormulaireAjout()">Vider</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Modifier un patient</h2>
+        <div class="row">
+            <input type="number" id="updateId" placeholder="ID">
+            <input type="text" id="updateNom" placeholder="Nom">
+            <input type="text" id="updatePrenom" placeholder="Prénom">
+            <input type="text" id="updateTelephone" placeholder="Téléphone">
+            <input type="email" id="updateEmail" placeholder="Email">
+            <input type="text" id="updateAdresse" placeholder="Adresse">
+            <input type="text" id="updateStatut" placeholder="Statut">
+        </div>
+        <div style="margin-top: 12px;">
+            <button class="btn-warning" onclick="modifierPatient()">Modifier</button>
+            <button class="btn-secondary" onclick="viderFormulaireUpdate()">Vider</button>
+        </div>
+        <div class="small-box">
+            Astuce : clique sur <b>Charger</b> dans le tableau pour remplir automatiquement ce formulaire.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Actions générales</h2>
+        <div class="actions">
+            <button class="btn-primary" onclick="chargerPatients()">Actualiser les patients</button>
+            <button class="btn-info" onclick="voirConfig()">Voir config externe</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Liste des patients</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Téléphone</th>
+                <th>Email</th>
+                <th>Adresse</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="patientsTableBody">
+            <tr>
+                <td colspan="8">Clique sur "Actualiser les patients"</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Résultat JSON</h2>
+        <pre id="resultat">Les résultats apparaîtront ici...</pre>
+    </div>
+
+</div>
+
+<script>
+    const baseUrl = "http://localhost:8081/patients";
+
+    function afficherResultat(data) {
+        document.getElementById("resultat").textContent =
+            typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    }
+
+    function getStatusClass(statut) {
+        if (!statut) return "";
+        if (statut === "ACTIF") return "status-actif";
+        if (statut === "DOUBLON") return "status-doublon";
+        if (statut === "INCOMPLET") return "status-incomplet";
+        return "";
+    }
+
+    async function ajouterPatient() {
+        const patient = {
+            nom: document.getElementById("nom").value,
+            prenom: document.getElementById("prenom").value,
+            telephone: document.getElementById("telephone").value,
+            email: document.getElementById("email").value,
+            adresse: document.getElementById("adresse").value,
+            statut: document.getElementById("statut").value
+        };
+
+        const response = await fetch(baseUrl, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(patient)
+        });
+
+        const data = await response.json();
+        afficherResultat(data);
+        viderFormulaireAjout();
+        chargerPatients();
+    }
+
+    async function chargerPatients(silencieux = false) {
+        const response = await fetch(baseUrl);
+        const patients = await response.json();
+
+        const tbody = document.getElementById("patientsTableBody");
+        tbody.innerHTML = "";
+
+        if (!patients.length) {
+            tbody.innerHTML = `<tr><td colspan="8">Aucun patient trouvé</td></tr>`;
+            if (!silencieux) afficherResultat(patients);
+            return;
+        }
+
+        patients.forEach(patient => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${patient.id ?? ""}</td>
+                <td>${patient.nom ?? ""}</td>
+                <td>${patient.prenom ?? ""}</td>
+                <td>${patient.telephone ?? ""}</td>
+                <td>${patient.email ?? ""}</td>
+                <td>${patient.adresse ?? ""}</td>
+                <td class="${getStatusClass(patient.statut)}">${patient.statut ?? ""}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-primary" onclick="voirPatient(${patient.id})">Voir</button>
+                        <button class="btn-warning" onclick="chargerPourModification(${patient.id})">Charger</button>
+                        <button class="btn-info" onclick="voirDecision(${patient.id})">Décision</button>
+                        <button class="btn-danger" onclick="supprimerPatient(${patient.id})">Supprimer</button>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+        if (!silencieux) afficherResultat(patients);
+    }
+
+    async function voirPatient(id) {
+        const response = await fetch(`${baseUrl}/${id}`);
+        const data = await response.json();
+        afficherResultat(data);
+    }
+
+    async function chargerPourModification(id) {
+        const response = await fetch(`${baseUrl}/${id}`);
+        const patient = await response.json();
+
+        document.getElementById("updateId").value = patient.id ?? "";
+        document.getElementById("updateNom").value = patient.nom ?? "";
+        document.getElementById("updatePrenom").value = patient.prenom ?? "";
+        document.getElementById("updateTelephone").value = patient.telephone ?? "";
+        document.getElementById("updateEmail").value = patient.email ?? "";
+        document.getElementById("updateAdresse").value = patient.adresse ?? "";
+        document.getElementById("updateStatut").value = patient.statut ?? "";
+
+        afficherResultat(patient);
+    }
+
+    async function modifierPatient() {
+        const id = document.getElementById("updateId").value;
+
+        if (!id) {
+            afficherResultat("Veuillez renseigner l'ID du patient à modifier.");
+            return;
+        }
+
+        const patient = {
+            nom: document.getElementById("updateNom").value,
+            prenom: document.getElementById("updatePrenom").value,
+            telephone: document.getElementById("updateTelephone").value,
+            email: document.getElementById("updateEmail").value,
+            adresse: document.getElementById("updateAdresse").value,
+            statut: document.getElementById("updateStatut").value
+        };
+
+        const response = await fetch(`${baseUrl}/${id}`, {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(patient)
+        });
+
+        const data = await response.json();
+        afficherResultat(data);
+        viderFormulaireUpdate();
+        chargerPatients();
+    }
+
+    async function supprimerPatient(id) {
+        const confirmation = confirm("Voulez-vous vraiment supprimer ce patient ?");
+        if (!confirmation) return;
+
+        const response = await fetch(`${baseUrl}/${id}`, {
+            method: "DELETE"
+        });
+
+        const data = await response.json();
+        afficherResultat(data);
+        chargerPatients();
+    }
+
+    async function voirDecision(id) {
+        const response = await fetch(`${baseUrl}/${id}/decision`);
+        const data = await response.json();
+        afficherResultat(data);
+    }
+
+    async function voirConfig() {
+        const response = await fetch(`${baseUrl}/config/external`);
+        const data = await response.json();
+        afficherResultat(data);
+    }
+
+    function viderFormulaireAjout() {
+        document.getElementById("nom").value = "";
+        document.getElementById("prenom").value = "";
+        document.getElementById("telephone").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("adresse").value = "";
+        document.getElementById("statut").value = "";
+    }
+
+    function viderFormulaireUpdate() {
+        document.getElementById("updateId").value = "";
+        document.getElementById("updateNom").value = "";
+        document.getElementById("updatePrenom").value = "";
+        document.getElementById("updateTelephone").value = "";
+        document.getElementById("updateEmail").value = "";
+        document.getElementById("updateAdresse").value = "";
+        document.getElementById("updateStatut").value = "";
+    }
+
+    chargerPatients();
+
+    setInterval(() => {
+        chargerPatients(true);
+    }, 5000);
+</script>
+</body>
+</html>
