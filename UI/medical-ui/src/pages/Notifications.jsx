@@ -92,12 +92,25 @@ export default function Notifications() {
 
   async function updateNotif(e) {
     e.preventDefault();
-    // Update locally since backend doesn't support PUT yet
-    setNotifs(prev => prev.map(n => n.id === editModal.id
-      ? { ...n, message: editForm.message, type: editForm.type }
-      : n
-    ));
-    toast('Notification modifiée (local)'); setEditModal(null);
+    try {
+      await axios.put(api(`/${editModal.id}`), { message: editForm.message, type: editForm.type });
+      toast('Notification modifiée'); loadAll();
+    } catch {
+      setNotifs(prev => prev.map(n => n.id === editModal.id ? { ...n, message: editForm.message, type: editForm.type } : n));
+      toast('Notification modifiée (local)');
+    }
+    setEditModal(null);
+  }
+
+  async function deleteNotif(id) {
+    if (!confirm('Supprimer cette notification ?')) return;
+    try {
+      await axios.delete(api(`/${id}`));
+      toast('Notification supprimée'); loadAll();
+    } catch {
+      setNotifs(prev => prev.filter(n => n.id !== id));
+      toast('Notification supprimée (local)');
+    }
   }
 
   async function loadHistoriqueByRdv() {
@@ -208,8 +221,11 @@ export default function Notifications() {
                     <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</td>
                     <td>{n.rendezVousId ? <span className="badge badge-purple">#{n.rendezVousId}</span> : '—'}</td>
                     <td style={{ fontSize: '0.8rem', color: '#64748b', whiteSpace: 'nowrap' }}>{n.date ? new Date(n.date).toLocaleString('fr-FR') : '—'}</td>
-                    <td><button className="btn btn-ghost btn-sm" onClick={() => setViewModal({ ...n, _type: 'notif' })}>👁</button>
-                    <button className="btn btn-warning btn-sm" onClick={() => { setEditModal(n); setEditForm({ message: n.message, type: n.type }); }}>✏️</button></td>
+                    <td>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setViewModal({ ...n, _type: 'notif' })}>👁</button>
+                      <button className="btn btn-warning btn-sm" onClick={() => { setEditModal(n); setEditForm({ message: n.message, type: n.type }); }}>✏️</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => deleteNotif(n.id)}>🗑️</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
