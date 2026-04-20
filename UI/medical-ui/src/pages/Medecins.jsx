@@ -24,6 +24,7 @@ export default function Medecins() {
   const [viewModal, setViewModal] = useState(null);
   const [scoreModal, setScoreModal] = useState(null);
   const [rapportModal, setRapportModal] = useState(null);
+  const [recommandationModal, setRecommandationModal] = useState(null);
   const [form, setForm] = useState(EMPTY_MED);
   const [specForm, setSpecForm] = useState(EMPTY_SPEC);
   const [editing, setEditing] = useState(null);
@@ -127,7 +128,8 @@ export default function Medecins() {
   async function recommander(specId) {
     try {
       const res = await axios.get(api(`/recommander/${specId}`));
-      toast(`Médecin recommandé: Dr. ${res.data.prenom} ${res.data.nom}`, 'info');
+      const spec = specialites.find(s => s.id === specId);
+      setRecommandationModal({ specialite: spec, data: res.data });
     } catch { toast('Aucun médecin disponible pour cette spécialité', 'error'); }
   }
 
@@ -339,22 +341,144 @@ export default function Medecins() {
       )}
 
       {/* Score Modal */}
-      {scoreModal && (
-        <Modal title={`📊 Score — Dr. ${scoreModal.medecin.prenom} ${scoreModal.medecin.nom}`} onClose={() => setScoreModal(null)}
-          footer={<button className="btn btn-ghost" onClick={() => setScoreModal(null)}>Fermer</button>}
-        >
-          <pre style={{ background: '#f8fafc', padding: 16, borderRadius: 10, fontSize: '0.82rem', overflow: 'auto' }}>{JSON.stringify(scoreModal.data, null, 2)}</pre>
-        </Modal>
-      )}
+      {scoreModal && (() => {
+        const d = scoreModal.data;
+        const niveau = d.niveau || '';
+        const score = d.scoreCharge || 0;
+        const colors = { DISPONIBLE: '#10b981', CHARGE_NORMALE: '#f59e0b', SURCHARGE: '#ef4444' };
+        const bg = { DISPONIBLE: '#d1fae5', CHARGE_NORMALE: '#fef3c7', SURCHARGE: '#fee2e2' };
+        const icons = { DISPONIBLE: '🟢', CHARGE_NORMALE: '🟡', SURCHARGE: '🔴' };
+        const labels = { DISPONIBLE: 'Disponible', CHARGE_NORMALE: 'Charge normale', SURCHARGE: 'Surchargé' };
+        return (
+          <Modal title={`📊 Score de charge — Dr. ${scoreModal.medecin.prenom} ${scoreModal.medecin.nom}`} onClose={() => setScoreModal(null)}
+            footer={<button className="btn btn-ghost" onClick={() => setScoreModal(null)}>Fermer</button>}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Niveau badge */}
+              <div style={{ background: bg[niveau] || '#f1f5f9', borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span style={{ fontSize: '2.5rem' }}>{icons[niveau] || '⚪'}</span>
+                <div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: colors[niveau] || '#64748b' }}>{labels[niveau] || niveau}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>Score de charge : {score}/3</div>
+                </div>
+              </div>
+              {/* Score bar */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: 6 }}>
+                  <span>0 RDV</span><span>7 RDV</span><span>15+ RDV</span>
+                </div>
+                <div style={{ height: 10, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${Math.min((d.nbRendezVous || 0) / 20 * 100, 100)}%`, background: colors[niveau] || '#6366f1', borderRadius: 10, transition: 'width 0.5s' }} />
+                </div>
+                <div style={{ textAlign: 'center', marginTop: 6, fontWeight: 700, fontSize: '0.9rem' }}>{d.nbRendezVous || 0} rendez-vous</div>
+              </div>
+              {/* Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[['Médecin', d.nom], ['RDV en cours', d.nbRendezVous ?? 0], ['Score', `${score} / 3`], ['Niveau', labels[niveau] || niveau]].map(([label, val]) => (
+                  <div key={label} style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 14px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>{label}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Recommandation */}
+              <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 16px', border: '1px solid #bfdbfe' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#1e40af', marginBottom: 4 }}>💡 Recommandation</div>
+                <div style={{ fontSize: '0.875rem', color: '#1e293b' }}>{d.recommandation}</div>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {/* Rapport Modal */}
-      {rapportModal && (
-        <Modal title="📊 Rapport d'analyse global" onClose={() => setRapportModal(null)}
-          footer={<button className="btn btn-ghost" onClick={() => setRapportModal(null)}>Fermer</button>}
-        >
-          <pre style={{ background: '#f8fafc', padding: 16, borderRadius: 10, fontSize: '0.82rem', overflow: 'auto', maxHeight: 400 }}>{JSON.stringify(rapportModal, null, 2)}</pre>
-        </Modal>
-      )}
+      {rapportModal && (() => {
+        const taux = parseFloat(rapportModal.tauxDisponibilite) || 0;
+        const alerte = rapportModal.alerte || '';
+        const isNormal = alerte.includes('NORMAL');
+        const isCritique = alerte.includes('CRITIQUE');
+        const color = isCritique ? '#ef4444' : isNormal ? '#10b981' : '#f59e0b';
+        const bg = isCritique ? '#fee2e2' : isNormal ? '#d1fae5' : '#fef3c7';
+        const icon = isCritique ? '🔴' : isNormal ? '🟢' : '🟡';
+        return (
+          <Modal title="📊 Rapport d'analyse global" onClose={() => setRapportModal(null)}
+            footer={<button className="btn btn-ghost" onClick={() => setRapportModal(null)}>Fermer</button>}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Alerte */}
+              <div style={{ background: bg, borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: '2rem' }}>{icon}</span>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color }}>{alerte}</div>
+              </div>
+              {/* Taux bar */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: 6 }}>
+                  <span>0%</span><span>Taux de disponibilité</span><span>100%</span>
+                </div>
+                <div style={{ height: 12, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${taux}%`, background: color, borderRadius: 10, transition: 'width 0.6s' }} />
+                </div>
+                <div style={{ textAlign: 'center', marginTop: 6, fontWeight: 800, fontSize: '1.1rem', color }}>{rapportModal.tauxDisponibilite}</div>
+              </div>
+              {/* Stats grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                {[['Total', rapportModal.totalMedecins, '👨‍⚕️', '#6366f1', '#ede9fe'],
+                  ['Disponibles', rapportModal.medecinsDisponibles, '✅', '#10b981', '#d1fae5'],
+                  ['Occupés', rapportModal.medecinsOccupes, '🔴', '#ef4444', '#fee2e2']
+                ].map(([label, val, ico, c, b]) => (
+                  <div key={label} style={{ background: b, borderRadius: 12, padding: '14px', textAlign: 'center', border: `1px solid ${c}30` }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{ico}</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: c }}>{val}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
+
+      {/* Recommandation Modal */}
+      {recommandationModal && (() => {
+        const d = recommandationModal.data;
+        const m = d.medecinRecommande;
+        return (
+          <Modal title={`⭐ Recommandation — ${recommandationModal.specialite?.nom || 'Spécialité'}`} onClose={() => setRecommandationModal(null)}
+            footer={<button className="btn btn-ghost" onClick={() => setRecommandationModal(null)}>Fermer</button>}
+          >
+            {m ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ background: '#d1fae5', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div className="avatar avatar-green" style={{ width: 52, height: 52, fontSize: '1.2rem' }}>{initials(m.nom, m.prenom)}</div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#065f46' }}>Dr. {m.prenom} {m.nom}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#047857', marginTop: 2 }}>{m.specialite?.nom || recommandationModal.specialite?.nom}</div>
+                  </div>
+                  <span className="badge badge-green" style={{ marginLeft: 'auto' }}>✅ Disponible</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {[['Email', m.email || '—'], ['Téléphone', m.telephone || '—']].map(([label, val]) => (
+                    <div key={label} style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 14px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 3 }}>{label}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 16px', border: '1px solid #bfdbfe', fontSize: '0.875rem', color: '#1e40af' }}>
+                  💡 {d.raison}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: '#fee2e2', borderRadius: 12, padding: '16px 20px', color: '#991b1b', fontWeight: 600 }}>
+                  ⚠️ {d.message}
+                </div>
+                {d.suggestion && <div style={{ background: '#fef3c7', borderRadius: 10, padding: '12px 16px', color: '#92400e', fontSize: '0.875rem' }}>💡 {d.suggestion}</div>}
+              </div>
+            )}
+          </Modal>
+        );
+      })()}
     </div>
   );
 }
