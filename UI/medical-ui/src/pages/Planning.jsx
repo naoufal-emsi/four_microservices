@@ -63,12 +63,18 @@ export default function Planning() {
 
   async function bloquer(id) {
     try { await axios.put(api(`/${id}/bloquer`)); toast('Créneau bloqué'); load(); }
-    catch (e) { toast(e.response?.data?.message || e.response?.data?.error || 'Erreur', 'error'); }
+    catch (e) {
+      const msg = e.response?.data?.message || e.response?.data?.error || e.response?.data || 'Erreur';
+      toast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
+    }
   }
 
   async function liberer(id) {
     try { await axios.put(api(`/${id}/liberer`)); toast('Créneau libéré'); load(); }
-    catch (e) { toast(e.response?.data?.message || e.response?.data?.error || 'Erreur', 'error'); }
+    catch (e) {
+      const msg = e.response?.data?.message || e.response?.data?.error || e.response?.data || 'Erreur';
+      toast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
+    }
   }
 
   async function loadStats() {
