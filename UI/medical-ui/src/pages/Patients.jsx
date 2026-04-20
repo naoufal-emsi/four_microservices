@@ -4,7 +4,7 @@ import { useConfig } from '../config';
 import Modal from '../components/Modal';
 import { useToast, ToastContainer } from '../hooks/useToast';
 
-const EMPTY = { nom: '', prenom: '', telephone: '', email: '', adresse: '', statut: 'Actif' };
+const EMPTY = { nom: '', prenom: '', telephone: '', email: '', adresse: '', statut: 'ACTIF' };
 
 function initials(nom, prenom) {
   return `${(nom || '?')[0]}${(prenom || '?')[0]}`.toUpperCase();
@@ -80,7 +80,7 @@ export default function Patients() {
   }
 
   function openEdit(p) {
-    setForm({ nom: p.nom || '', prenom: p.prenom || '', telephone: p.telephone || '', email: p.email || '', adresse: p.adresse || '', statut: p.statut || 'Actif' });
+    setForm({ nom: p.nom || '', prenom: p.prenom || '', telephone: p.telephone || '', email: p.email || '', adresse: p.adresse || '', statut: p.statut?.toUpperCase() || 'ACTIF' });
     setEditing(p.id); setModal(true);
   }
 
@@ -99,7 +99,7 @@ export default function Patients() {
 
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon purple">👤</div><div className="stat-info"><div className="stat-number">{patients.length}</div><div className="stat-label">Total patients</div></div></div>
-        <div className="stat-card"><div className="stat-icon green">✅</div><div className="stat-info"><div className="stat-number">{patients.filter(p => p.statut === 'Actif').length}</div><div className="stat-label">Actifs</div></div></div>
+        <div className="stat-card"><div className="stat-icon green">✅</div><div className="stat-info"><div className="stat-number">{patients.filter(p => p.statut?.toUpperCase() === 'ACTIF').length}</div><div className="stat-label">Actifs</div></div></div>
         <div className="stat-card"><div className="stat-icon blue">🔍</div><div className="stat-info"><div className="stat-number">{filtered.length}</div><div className="stat-label">Résultats</div></div></div>
       </div>
 
@@ -128,7 +128,7 @@ export default function Patients() {
                     <td>{f(p.telephone)}</td>
                     <td>{f(p.email)}</td>
                     <td style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f(p.adresse)}</td>
-                    <td><span className={`badge ${p.statut === 'Actif' ? 'badge-green' : 'badge-gray'}`}>{f(p.statut)}</span></td>
+                    <td><span className={`badge ${p.statut?.toUpperCase() === 'ACTIF' ? 'badge-green' : 'badge-gray'}`}>{f(p.statut)}</span></td>
                     <td>
                       <div className="actions-cell">
                         <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(p)}>👁</button>
@@ -167,8 +167,8 @@ export default function Patients() {
             <div className="form-group">
               <label>Statut</label>
               <select value={form.statut} onChange={e => setForm({ ...form, statut: e.target.value })}>
-                <option value="Actif">Actif</option>
-                <option value="Inactif">Inactif</option>
+                <option value="ACTIF">Actif</option>
+                <option value="INACTIF">Inactif</option>
               </select>
             </div>
           </form>
@@ -186,7 +186,7 @@ export default function Patients() {
         >
           <div className="detail-grid">
             <div className="detail-item"><label>ID</label><span>#{viewModal.id}</span></div>
-            <div className="detail-item"><label>Statut</label><span><span className={`badge ${viewModal.statut === 'Actif' ? 'badge-green' : 'badge-gray'}`}>{f(viewModal.statut)}</span></span></div>
+            <div className="detail-item"><label>Statut</label><span><span className={`badge ${viewModal.statut?.toUpperCase() === 'ACTIF' ? 'badge-green' : 'badge-gray'}`}>{f(viewModal.statut)}</span></span></div>
             <div className="detail-item"><label>Nom</label><span>{viewModal.nom}</span></div>
             <div className="detail-item"><label>Prénom</label><span>{viewModal.prenom}</span></div>
             <div className="detail-item"><label>Téléphone</label><span>{f(viewModal.telephone)}</span></div>
