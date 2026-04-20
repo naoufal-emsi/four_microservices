@@ -4,8 +4,14 @@ import { useConfig } from '../config';
 import Modal from '../components/Modal';
 import { useToast, ToastContainer } from '../hooks/useToast';
 
-const TYPE_BADGE = { CREATE: 'badge-green', CANCEL: 'badge-red', UPDATE: 'badge-blue' };
-const TYPE_ICON  = { CREATE: '📅', CANCEL: '❌', UPDATE: '🔄' };
+const TYPE_BADGE = {
+  CREATE: 'badge-green', CANCEL: 'badge-red', UPDATE: 'badge-blue',
+  RDV_CREE: 'badge-green', RDV_ANNULE: 'badge-red', RDV_STATUT_CHANGE: 'badge-blue'
+};
+const TYPE_ICON = {
+  CREATE: '📅', CANCEL: '❌', UPDATE: '🔄',
+  RDV_CREE: '📅', RDV_ANNULE: '❌', RDV_STATUT_CHANGE: '🔄'
+};
 
 export default function Notifications() {
   const [notifs, setNotifs] = useState([]);

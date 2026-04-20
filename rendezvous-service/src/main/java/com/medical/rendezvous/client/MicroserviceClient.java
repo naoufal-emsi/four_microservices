@@ -30,7 +30,7 @@ public class MicroserviceClient {
 
     public boolean patientExists(Long patientId) {
         try {
-            restTemplate.getForObject(patientsUrl + "/api/patients/" + patientId, Object.class);
+            restTemplate.getForObject(patientsUrl + "/patients/" + patientId, Object.class);
             return true;
         } catch (Exception e) {
             System.err.println("[WARN] patients-service unreachable, skipping validation: " + e.getMessage());
@@ -40,7 +40,7 @@ public class MicroserviceClient {
 
     public boolean medecinExists(Long medecinId) {
         try {
-            restTemplate.getForObject(medecinsUrl + "/api/medecins/" + medecinId, Object.class);
+            restTemplate.getForObject(medecinsUrl + "/medecins/" + medecinId, Object.class);
             return true;
         } catch (Exception e) {
             System.err.println("[WARN] medecins-service unreachable, skipping validation: " + e.getMessage());
@@ -51,8 +51,8 @@ public class MicroserviceClient {
     public boolean creneauDisponible(Long creneauId) {
         try {
             Map response = restTemplate.getForObject(
-                planningUrl + "/api/creneaux/" + creneauId, Map.class);
-            return response != null && "DISPONIBLE".equals(response.get("statut"));
+                planningUrl + "/creneaux/" + creneauId, Map.class);
+            return response != null && Boolean.TRUE.equals(response.get("disponible"));
         } catch (Exception e) {
             System.err.println("[WARN] planning-service unreachable, skipping validation: " + e.getMessage());
             return true;
@@ -61,7 +61,7 @@ public class MicroserviceClient {
 
     public void bloquerCreneau(Long creneauId) {
         try {
-            restTemplate.put(planningUrl + "/api/creneaux/" + creneauId + "/bloquer", null);
+            restTemplate.put(planningUrl + "/creneaux/" + creneauId + "/bloquer", null);
         } catch (Exception e) {
             System.err.println("[WARN] planning-service unreachable, could not block creneau: " + e.getMessage());
         }
@@ -69,7 +69,7 @@ public class MicroserviceClient {
 
     public void libererCreneau(Long creneauId) {
         try {
-            restTemplate.put(planningUrl + "/api/creneaux/" + creneauId + "/liberer", null);
+            restTemplate.put(planningUrl + "/creneaux/" + creneauId + "/liberer", null);
         } catch (Exception e) {
             System.err.println("[WARN] planning-service unreachable, could not free creneau: " + e.getMessage());
         }
