@@ -216,6 +216,10 @@ export default function Medecins() {
                         <div className="actions-cell">
                           <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(m)}>👁</button>
                           <button className="btn btn-info btn-sm" onClick={() => getScore(m)}>📊 Score</button>
+                          {m.disponible
+                            ? <button className="btn btn-warning btn-sm" title="Marquer comme non disponible (congé, absence...)" onClick={() => occuper(m.id)}>🔒</button>
+                            : <button className="btn btn-success btn-sm" title="Marquer comme disponible" onClick={() => liberer(m.id)}>🔓</button>
+                          }
                           <button className="btn btn-warning btn-sm" onClick={() => openEdit(m)}>✏️</button>
                           <button className="btn btn-danger btn-sm" onClick={() => removeMedecin(m.id, `${m.prenom} ${m.nom}`)}>🗑️</button>
                         </div>
@@ -327,6 +331,10 @@ export default function Medecins() {
         <Modal title={`🩺 Dr. ${viewModal.prenom} ${viewModal.nom}`} onClose={() => setViewModal(null)}
           footer={<>
             <button className="btn btn-ghost" onClick={() => setViewModal(null)}>Fermer</button>
+            {viewModal.disponible
+              ? <button className="btn btn-warning" onClick={() => { occuper(viewModal.id); setViewModal(null); }}>🔒 Indisponible</button>
+              : <button className="btn btn-success" onClick={() => { liberer(viewModal.id); setViewModal(null); }}>🔓 Disponible</button>
+            }
             <button className="btn btn-info" onClick={() => { getScore(viewModal); setViewModal(null); }}>📊 Score</button>
             <button className="btn btn-warning" onClick={() => { setViewModal(null); openEdit(viewModal); }}>✏️ Modifier</button>
           </>}
