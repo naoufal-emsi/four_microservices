@@ -18,25 +18,29 @@ const NAV = [
 ];
 
 function Sidebar() {
+  const { config } = useConfig();
   const [status, setStatus] = useState({});
 
   useEffect(() => {
     async function pingAll() {
       const results = {};
       await Promise.all(NAV.map(async n => {
+        const s = config[n.service];
+        if (!s?.ip || !s?.port) { results[n.service] = 'unknown'; return; }
+        const url = `http://${s.ip}:${s.port}${SERVICE_PATHS[n.service]}`;
         try {
-          await fetch(`/proxy/${n.service}${SERVICE_PATHS[n.service]}`, {
-            method: 'GET', mode: 'no-cors', signal: AbortSignal.timeout(3000)
-          });
+          await fetch(url, { method: 'GET', mode: 'no-cors', signal: AbortSignal.timeout(3000) });
           results[n.service] = 'ok';
         } catch { results[n.service] = 'error'; }
       }));
       setStatus(results);
     }
-    pingAll();
-    const interval = setInterval(pingAll, 30000);
+    if (Object.keys(config).length) pingAll();
+    const interval = setInterval(() => {
+      if (Object.keys(config).length) pingAll();
+    }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [config]);
 
   const allOk = NAV.every(n => status[n.service] === 'ok');
   const anyOk = NAV.some(n => status[n.service] === 'ok');

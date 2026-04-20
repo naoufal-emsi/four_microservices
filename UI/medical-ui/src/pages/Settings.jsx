@@ -178,10 +178,11 @@ export default function Settings() {
         <div className="card-body">
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
             {[
-              { label: 'IP locale', value: '192.168.11.143' },
-              { label: 'rendezvous-service', value: ':8083' },
-              { label: 'dossiers-service', value: ':8084' },
-              { label: 'UI React', value: ':5173' },
+              { label: 'rendezvous-service', value: `${local.rendezvous?.ip}:${local.rendezvous?.port}` },
+              { label: 'notifications-service', value: `${local.notifications?.ip}:${local.notifications?.port}` },
+              { label: 'patients-service', value: `${local.patients?.ip}:${local.patients?.port}` },
+              { label: 'medecins-service', value: `${local.medecins?.ip}:${local.medecins?.port}` },
+              { label: 'UI React', value: `${local.rendezvous?.ip}:5173` },
             ].map(item => (
               <div key={item.label}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>{item.label}</div>
@@ -190,7 +191,7 @@ export default function Settings() {
             ))}
           </div>
           <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: 10, fontSize: '0.82rem', color: '#64748b' }}>
-            💡 Partagez <strong>http://192.168.11.143:5173</strong> avec vos coéquipiers.
+            💡 Partagez <strong>http://{local.rendezvous?.ip}:5173</strong> avec vos coéquipiers.
           </div>
         </div>
       </div>
