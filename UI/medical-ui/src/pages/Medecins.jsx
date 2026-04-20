@@ -31,6 +31,7 @@ export default function Medecins() {
   const [specForm, setSpecForm] = useState(EMPTY_SPEC);
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [scores, setScores] = useState({});
   const { toasts, toast } = useToast();
 
   const { getApi } = useConfig();
@@ -56,6 +57,12 @@ export default function Medecins() {
       const res = await axios.get(api());
       const data = Array.isArray(res.data) ? res.data : [];
       setMedecins(data);
+      // load scores for all medecins in background
+      data.forEach(m => {
+        axios.get(api(`/${m.id}/score`))
+          .then(r => setScores(prev => ({ ...prev, [m.id]: r.data })))
+          .catch(() => {});
+      });
     } catch { toast('Impossible de contacter medecins-service', 'error'); }
   }
 
@@ -164,6 +171,7 @@ export default function Medecins() {
         <div className="stat-card"><div className="stat-icon green">🩺</div><div className="stat-info"><div className="stat-number">{medecins.length}</div><div className="stat-label">Total médecins</div></div></div>
         <div className="stat-card"><div className="stat-icon green">✅</div><div className="stat-info"><div className="stat-number">{medecins.filter(m => m.disponible).length}</div><div className="stat-label">Disponibles</div></div></div>
         <div className="stat-card"><div className="stat-icon red">🔴</div><div className="stat-info"><div className="stat-number">{medecins.filter(m => !m.disponible).length}</div><div className="stat-label">Occupés</div></div></div>
+        <div className="stat-card"><div className="stat-icon red">⚠️</div><div className="stat-info"><div className="stat-number">{Object.values(scores).filter(s => s.niveau === 'SURCHARGE').length}</div><div className="stat-label">Surchargés</div></div></div>
         <div className="stat-card"><div className="stat-icon yellow">🏷️</div><div className="stat-info"><div className="stat-number">{specialites.length}</div><div className="stat-label">Spécialités</div></div></div>
       </div>
 
@@ -198,7 +206,7 @@ export default function Medecins() {
               <div className="empty-state"><div className="empty-icon">🩺</div><p>Aucun médecin trouvé</p></div>
             ) : (
               <table>
-                <thead><tr><th>Médecin</th><th>Spécialité</th><th>Téléphone</th><th>Email</th><th>Disponibilité</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Médecin</th><th>Spécialité</th><th>Téléphone</th><th>Email</th><th>Disponibilité</th><th>Charge</th><th>Actions</th></tr></thead>
                 <tbody>
                   {filtered.map(m => (
                     <tr key={m.id}>
@@ -212,6 +220,15 @@ export default function Medecins() {
                       <td>{f(m.telephone)}</td>
                       <td>{f(m.email)}</td>
                       <td><span className={`badge ${m.disponible ? 'badge-green' : 'badge-red'}`}>{m.disponible ? '✅ Disponible' : '🔴 Occupé'}</span></td>
+                      <td>{
+                        (() => {
+                          const s = scores[m.id];
+                          if (!s) return <span style={{color:'#94a3b8',fontSize:'0.75rem'}}>…</span>;
+                          const map = { DISPONIBLE: ['badge-green','🟢'], CHARGE_NORMALE: ['badge-yellow','🟡'], SURCHARGE: ['badge-red','🔴'] };
+                          const [cls, ico] = map[s.niveau] || ['badge-gray','⚪'];
+                          return <span className={`badge ${cls}`}>{ico} {s.nbRendezVous} RDV</span>;
+                        })()
+                      }</td>
                       <td>
                         <div className="actions-cell">
                           <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(m)}>👁</button>
