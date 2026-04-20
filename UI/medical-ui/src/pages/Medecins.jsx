@@ -18,6 +18,8 @@ export default function Medecins() {
   const [search, setSearch] = useState('');
   const [filterSpec, setFilterSpec] = useState('');
   const [filterDispo, setFilterDispo] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');  // unified search
+  const [searchSpec, setSearchSpec] = useState(''); // specialites tab search
   const [tab, setTab] = useState('medecins'); // 'medecins' | 'specialites'
   const [modal, setModal] = useState(false);
   const [specModal, setSpecModal] = useState(false);
@@ -42,7 +44,7 @@ export default function Medecins() {
   useEffect(() => { loadMedecins(); loadSpecialites(); }, []);
   useEffect(() => {
     setFiltered(medecins.filter(m => {
-      const matchSearch = `${m.nom} ${m.prenom} ${m.email} ${m.specialite?.nom || ''}`.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = `${m.nom} ${m.prenom} ${m.email} ${m.telephone} ${m.specialite?.nom || ''}`.toLowerCase().includes(search.toLowerCase());
       const matchSpec = filterSpec ? String(m.specialite?.id) === filterSpec : true;
       const matchDispo = filterDispo === '' ? true : filterDispo === 'true' ? m.disponible : !m.disponible;
       return matchSearch && matchSpec && matchDispo;
@@ -160,7 +162,7 @@ export default function Medecins() {
 
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-icon green">🩺</div><div className="stat-info"><div className="stat-number">{medecins.length}</div><div className="stat-label">Total médecins</div></div></div>
-        <div className="stat-card"><div className="stat-icon blue">✅</div><div className="stat-info"><div className="stat-number">{medecins.filter(m => m.disponible).length}</div><div className="stat-label">Disponibles</div></div></div>
+        <div className="stat-card"><div className="stat-icon green">✅</div><div className="stat-info"><div className="stat-number">{medecins.filter(m => m.disponible).length}</div><div className="stat-label">Disponibles</div></div></div>
         <div className="stat-card"><div className="stat-icon red">🔴</div><div className="stat-info"><div className="stat-number">{medecins.filter(m => !m.disponible).length}</div><div className="stat-label">Occupés</div></div></div>
         <div className="stat-card"><div className="stat-icon yellow">🏷️</div><div className="stat-info"><div className="stat-number">{specialites.length}</div><div className="stat-label">Spécialités</div></div></div>
       </div>
@@ -215,8 +217,8 @@ export default function Medecins() {
                           <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(m)}>👁</button>
                           <button className="btn btn-info btn-sm" onClick={() => getScore(m)}>📊</button>
                           {m.disponible
-                            ? <button className="btn btn-warning btn-sm" onClick={() => occuper(m.id)}>🔒</button>
-                            : <button className="btn btn-success btn-sm" onClick={() => liberer(m.id)}>🔓</button>
+                            ? <button className="btn btn-warning btn-sm" onClick={() => occuper(m.id)}>🔒 Occuper</button>
+                            : <button className="btn btn-success btn-sm" onClick={() => liberer(m.id)}>🔓 Libérer</button>
                           }
                           <button className="btn btn-warning btn-sm" onClick={() => openEdit(m)}>✏️</button>
                           <button className="btn btn-danger btn-sm" onClick={() => removeMedecin(m.id, `${m.prenom} ${m.nom}`)}>🗑️</button>
@@ -233,14 +235,20 @@ export default function Medecins() {
 
       {tab === 'specialites' && (
         <div className="card">
+          <div className="toolbar">
+            <div className="search-input-wrap">
+              <span className="search-icon">🔍</span>
+              <input placeholder="Rechercher une spécialité..." value={searchSpec} onChange={e => setSearchSpec(e.target.value)} />
+            </div>
+          </div>
           <div className="table-wrap">
-            {specialites.length === 0 ? (
+            {specialites.filter(s => s.nom.toLowerCase().includes(searchSpec.toLowerCase()) || (s.description||'').toLowerCase().includes(searchSpec.toLowerCase())).length === 0 ? (
               <div className="empty-state"><div className="empty-icon">🏷️</div><p>Aucune spécialité</p></div>
             ) : (
               <table>
                 <thead><tr><th>ID</th><th>Nom</th><th>Description</th><th>Médecins</th><th>Actions</th></tr></thead>
                 <tbody>
-                  {specialites.map(s => (
+                  {specialites.filter(s => s.nom.toLowerCase().includes(searchSpec.toLowerCase()) || (s.description||'').toLowerCase().includes(searchSpec.toLowerCase())).map(s => (
                     <tr key={s.id}>
                       <td className="td-id">#{s.id}</td>
                       <td><span className="badge badge-purple">{s.nom}</span></td>
@@ -323,6 +331,10 @@ export default function Medecins() {
         <Modal title={`🩺 Dr. ${viewModal.prenom} ${viewModal.nom}`} onClose={() => setViewModal(null)}
           footer={<>
             <button className="btn btn-ghost" onClick={() => setViewModal(null)}>Fermer</button>
+            {viewModal.disponible
+              ? <button className="btn btn-warning" onClick={() => { occuper(viewModal.id); setViewModal(null); }}>🔒 Marquer occupé</button>
+              : <button className="btn btn-success" onClick={() => { liberer(viewModal.id); setViewModal(null); }}>🔓 Libérer</button>
+            }
             <button className="btn btn-info" onClick={() => { getScore(viewModal); setViewModal(null); }}>📊 Score</button>
             <button className="btn btn-warning" onClick={() => { setViewModal(null); openEdit(viewModal); }}>✏️ Modifier</button>
           </>}
