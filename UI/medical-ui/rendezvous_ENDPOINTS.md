@@ -23,14 +23,14 @@
 
 **statut** values: `EN_ATTENTE` · `CONFIRME` · `ANNULE` · `TERMINE`
 
-> On creation, `dateCreation` and `statut` are set automatically by the server — no need to send them.
+> On creation, `dateCreation` and `statut` are set automatically by the server.
 
 ---
 
 ## Endpoints
 
 ### POST `/api/rendezvous`
-Create a new rendezvous. Validates patient, médecin, and créneau availability across microservices.
+Create a new rendezvous. Validates patient, médecin, and créneau across microservices.
 
 **Body:**
 ```json
@@ -44,7 +44,7 @@ Create a new rendezvous. Validates patient, médecin, and créneau availability 
 ```
 
 **201** → Rendezvous object  
-**400** → `"Patient introuvable: 1"` / `"Créneau indisponible ou introuvable: 5"` / `"Ce créneau est déjà réservé"`
+**400** → `"Patient introuvable: 1"` / `"Médecin introuvable: 2"` / `"Créneau indisponible ou introuvable: 5"` / `"Ce créneau est déjà réservé"`
 
 ---
 
@@ -78,7 +78,7 @@ Get all rendezvous for a médecin.
 ---
 
 ### PUT `/api/rendezvous/{id}/statut`
-Change the statut of a rendezvous. Automatically frees the créneau if set to `ANNULE` or `TERMINE`.
+Change the statut. Automatically frees the créneau if set to `ANNULE` or `TERMINE`.
 
 **Body:**
 ```json
@@ -117,6 +117,9 @@ Check reachability and latency of any URL.
 **200:**
 ```json
 { "status": "ok", "latency": 42, "url": "http://..." }
+```
+or on failure:
+```json
 { "status": "error", "latency": 120, "url": "http://...", "error": "Connection refused" }
 ```
 
