@@ -65,7 +65,9 @@ export default function Planning() {
     try { await axios.put(api(`/${id}/bloquer`)); toast('Créneau bloqué'); load(); }
     catch (e) {
       const msg = e.response?.data?.message || e.response?.data?.error || e.response?.data || 'Erreur';
-      toast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
+      const status = e.response?.status;
+      if (status === 409) toast(typeof msg === 'string' ? msg : 'Ce créneau est déjà bloqué ou expiré', 'error');
+      else toast(typeof msg === 'string' ? msg : 'Erreur', 'error');
     }
   }
 
@@ -73,7 +75,9 @@ export default function Planning() {
     try { await axios.put(api(`/${id}/liberer`)); toast('Créneau libéré'); load(); }
     catch (e) {
       const msg = e.response?.data?.message || e.response?.data?.error || e.response?.data || 'Erreur';
-      toast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
+      const status = e.response?.status;
+      if (status === 409) toast(typeof msg === 'string' ? msg : 'Ce créneau est déjà disponible ou expiré — impossible de libérer', 'error');
+      else toast(typeof msg === 'string' ? msg : 'Erreur', 'error');
     }
   }
 
@@ -145,17 +149,22 @@ export default function Planning() {
                   <tr key={c.id}>
                     <td className="td-id">#{c.id}</td>
                     <td><span className="badge badge-blue">{medecinName(c.medecinId)}</span></td>
-                    <td style={{ fontWeight: 500 }}>{f(c.date)}</td>
+                    <td style={{ fontWeight: 500 }}>
+                      {f(c.date)}
+                      {c.date && new Date(c.date + 'T' + (c.heureFin || '23:59')) < new Date() &&
+                        <span className="badge badge-gray" style={{marginLeft:6, fontSize:'0.65rem'}}>Expiré</span>}
+                    </td>
                     <td>{f(c.heureDebut)}</td>
                     <td>{f(c.heureFin)}</td>
                     <td><span className={`badge ${c.disponible ? 'badge-green' : 'badge-red'}`}>{c.disponible ? '🟢 Disponible' : '🔴 Réservé'}</span></td>
                     <td>
                       <div className="actions-cell">
                         <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(c)}>👁</button>
-                        {c.disponible
-                          ? <button className="btn btn-warning btn-sm" onClick={() => bloquer(c.id)}>🔒 Bloquer</button>
-                          : <button className="btn btn-success btn-sm" onClick={() => liberer(c.id)}>🔓 Libérer</button>
-                        }
+                        {!(c.date && new Date(c.date + 'T' + (c.heureFin || '23:59')) < new Date()) && (
+                          c.disponible
+                            ? <button className="btn btn-warning btn-sm" onClick={() => bloquer(c.id)}>🔒 Bloquer</button>
+                            : <button className="btn btn-success btn-sm" onClick={() => liberer(c.id)}>🔓 Libérer</button>
+                        )}
                       </div>
                     </td>
                   </tr>
