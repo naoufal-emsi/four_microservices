@@ -29,7 +29,8 @@ public class RendezvousService {
         if (!client.creneauDisponible(rdv.getCreneauId()))
             throw new RuntimeException("Créneau indisponible ou introuvable: " + rdv.getCreneauId());
 
-        if (repository.existsByCreneauIdAndStatutNot(rdv.getCreneauId(), Rendezvous.StatutRendezvous.ANNULE))
+        if (repository.existsByCreneauIdAndStatutNotAndStatutNot(rdv.getCreneauId(),
+                Rendezvous.StatutRendezvous.ANNULE, Rendezvous.StatutRendezvous.TERMINE))
             throw new RuntimeException("Ce créneau est déjà réservé");
 
         rdv.setDateCreation(LocalDateTime.now());
@@ -64,10 +65,18 @@ public class RendezvousService {
 
     public Rendezvous changerStatut(Long id, Rendezvous.StatutRendezvous nouveauStatut) {
         Rendezvous rdv = trouverParId(id);
+        Rendezvous.StatutRendezvous ancienStatut = rdv.getStatut();
         rdv.setStatut(nouveauStatut);
         Rendezvous saved = repository.save(rdv);
+
+        boolean liberer = (nouveauStatut == Rendezvous.StatutRendezvous.ANNULE
+                || nouveauStatut == Rendezvous.StatutRendezvous.TERMINE)
+                && ancienStatut != Rendezvous.StatutRendezvous.ANNULE
+                && ancienStatut != Rendezvous.StatutRendezvous.TERMINE;
+        if (liberer) client.libererCreneau(rdv.getCreneauId());
+
         client.envoyerNotification("RDV_STATUT_CHANGE",
-                "Rendez-vous " + id + " passé au statut " + nouveauStatut, id, null);
+                "Rendez-vous " + id + " passé au statut " + nouveauStatut, id, rdv.getPatientId());
         return saved;
     }
 

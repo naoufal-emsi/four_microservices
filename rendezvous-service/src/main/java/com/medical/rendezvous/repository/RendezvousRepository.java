@@ -9,4 +9,5 @@ public interface RendezvousRepository extends JpaRepository<Rendezvous, Long> {
     List<Rendezvous> findByMedecinId(Long medecinId);
     List<Rendezvous> findByStatut(Rendezvous.StatutRendezvous statut);
     boolean existsByCreneauIdAndStatutNot(Long creneauId, Rendezvous.StatutRendezvous statut);
+    boolean existsByCreneauIdAndStatutNotAndStatutNot(Long creneauId, Rendezvous.StatutRendezvous statut1, Rendezvous.StatutRendezvous statut2);
 }

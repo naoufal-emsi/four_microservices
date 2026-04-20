@@ -62,11 +62,14 @@ export default function Rendezvous() {
     e.preventDefault(); setLoading(true);
     try {
       const creneau = creneaux.find(c => String(c.id) === String(form.creneauId));
+      const dateHeure = creneau
+        ? `${creneau.date}T${creneau.heureDebut}`
+        : form.dateHeureRendezvous ? form.dateHeureRendezvous + ':00' : new Date().toISOString().slice(0, 19);
       await axios.post(api(), {
         patientId: Number(form.patientId),
         medecinId: Number(form.medecinId),
         creneauId: Number(form.creneauId),
-        dateHeureRendezvous: creneau ? `${creneau.date}T${creneau.heureDebut}` : form.dateHeureRendezvous + ':00',
+        dateHeureRendezvous: dateHeure,
         statut: 'EN_ATTENTE',
         motif: form.motif,
         notes: form.notes,

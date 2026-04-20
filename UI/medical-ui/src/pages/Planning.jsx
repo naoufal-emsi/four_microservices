@@ -87,6 +87,7 @@ export default function Planning() {
   }
 
   const medecinName = id => { const m = medecins.find(x => x.id === id || x.id === Number(id)); return m ? `Dr. ${m.prenom} ${m.nom}` : `Médecin #${id}`; };
+  const disponibles = creneaux.filter(c => c.disponible).length;
   const occupes = creneaux.filter(c => !c.disponible).length;
   const medecinIds = [...new Set(creneaux.map(c => c.medecinId).filter(Boolean))];
   const f = v => v || '—';
