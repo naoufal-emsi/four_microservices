@@ -21,11 +21,19 @@ export default function Notifications() {
   const [form, setForm] = useState({ message: '', type: 'CREATE', rendezVousId: '', patientId: '' });
   const [loading, setLoading] = useState(false);
   const { toasts, toast } = useToast();
+  const [patients, setPatients] = useState([]);
+  const [rdvs, setRdvs] = useState([]);
 
   const { getApi } = useConfig();
-  const api = (path = '') => getApi('notifications', path);
+  const api    = (path = '') => getApi('notifications', path);
+  const apiPat = (path = '') => getApi('patients', path);
+  const apiRdv = (path = '') => getApi('rendezvous', path);
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    loadAll();
+    axios.get(apiPat()).then(r => setPatients(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    axios.get(apiRdv()).then(r => setRdvs(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+  }, []);
   useEffect(() => {
     const source = tab === 'notifs' ? notifs : historique;
     setFiltered(source.filter(n => {
@@ -217,8 +225,20 @@ export default function Notifications() {
               </select>
             </div>
             <div className="form-row">
-              <div className="form-group"><label>ID Rendez-vous</label><input type="number" value={form.rendezVousId} onChange={e => setForm({ ...form, rendezVousId: e.target.value })} placeholder="123" /></div>
-              <div className="form-group"><label>ID Patient</label><input type="number" value={form.patientId} onChange={e => setForm({ ...form, patientId: e.target.value })} placeholder="456" /></div>
+              <div className="form-group">
+                <label>Patient</label>
+                <select value={form.patientId} onChange={e => setForm({ ...form, patientId: e.target.value })}>
+                  <option value="">— Sélectionner un patient —</option>
+                  {patients.map(p => <option key={p.id} value={p.id}>{p.prenom} {p.nom}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Rendez-vous</label>
+                <select value={form.rendezVousId} onChange={e => setForm({ ...form, rendezVousId: e.target.value })}>
+                  <option value="">— Sélectionner un RDV —</option>
+                  {rdvs.map(r => <option key={r.id} value={r.id}>RDV #{r.id} — {r.dateHeureRendezvous?.slice(0,16).replace('T',' ')}</option>)}
+                </select>
+              </div>
             </div>
           </form>
         </Modal>

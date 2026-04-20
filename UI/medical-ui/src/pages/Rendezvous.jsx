@@ -5,13 +5,15 @@ import Modal from '../components/Modal';
 import { useToast, ToastContainer } from '../hooks/useToast';
 
 const EMPTY = { patientId: '', medecinId: '', creneauId: '', dateHeureRendezvous: '', motif: '', notes: '' };
-
 const STATUT_BADGE = { EN_ATTENTE: 'badge-yellow', CONFIRME: 'badge-blue', ANNULE: 'badge-red', TERMINE: 'badge-green' };
 const STATUT_ICON  = { EN_ATTENTE: '⏳', CONFIRME: '✅', ANNULE: '❌', TERMINE: '🏁' };
 
 export default function Rendezvous() {
   const [rdvs, setRdvs] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [medecins, setMedecins] = useState([]);
+  const [creneaux, setCreneaux] = useState([]);
   const [filterStatut, setFilterStatut] = useState('');
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState(false);
@@ -23,18 +25,31 @@ export default function Rendezvous() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const { toasts, toast } = useToast();
-
   const { getApi } = useConfig();
-  const api = (path = '') => getApi('rendezvous', path);
 
-  useEffect(() => { load(); }, []);
+  const api     = (p = '') => getApi('rendezvous', p);
+  const apiPat  = (p = '') => getApi('patients', p);
+  const apiMed  = (p = '') => getApi('medecins', p);
+  const apiPlan = (p = '') => getApi('planning', p);
+
+  useEffect(() => {
+    load();
+    axios.get(apiPat()).then(r => setPatients(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    axios.get(apiMed()).then(r => setMedecins(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    axios.get(apiPlan('/disponibles')).then(r => setCreneaux(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+  }, []);
+
   useEffect(() => {
     setFiltered(rdvs.filter(r => {
+      const p = patients.find(x => x.id === r.patientId);
+      const m = medecins.find(x => x.id === r.medecinId);
       const matchStatut = filterStatut ? r.statut === filterStatut : true;
-      const matchSearch = search ? `${r.patientId} ${r.medecinId} ${r.motif||''}`.toLowerCase().includes(search.toLowerCase()) : true;
+      const matchSearch = search
+        ? `${p?.nom||''} ${p?.prenom||''} ${m?.nom||''} ${m?.prenom||''} ${r.motif||''}`.toLowerCase().includes(search.toLowerCase())
+        : true;
       return matchStatut && matchSearch;
     }));
-  }, [filterStatut, search, rdvs]);
+  }, [filterStatut, search, rdvs, patients, medecins]);
 
   async function load() {
     try {
@@ -46,17 +61,20 @@ export default function Rendezvous() {
   async function submit(e) {
     e.preventDefault(); setLoading(true);
     try {
+      const creneau = creneaux.find(c => String(c.id) === String(form.creneauId));
       await axios.post(api(), {
         patientId: Number(form.patientId),
         medecinId: Number(form.medecinId),
         creneauId: Number(form.creneauId),
-        dateHeureRendezvous: form.dateHeureRendezvous ? form.dateHeureRendezvous + ':00' : '',
-        dateCreation: new Date().toISOString().slice(0,19),
+        dateHeureRendezvous: creneau ? `${creneau.date}T${creneau.heureDebut}` : form.dateHeureRendezvous + ':00',
         statut: 'EN_ATTENTE',
         motif: form.motif,
         notes: form.notes,
       });
-      toast('Rendez-vous créé avec succès'); setModal(false); setForm(EMPTY); load();
+      toast('Rendez-vous créé avec succès');
+      setModal(false); setForm(EMPTY); load();
+      // refresh creneaux disponibles
+      axios.get(apiPlan('/disponibles')).then(r => setCreneaux(Array.isArray(r.data) ? r.data : [])).catch(() => {});
     } catch (e) { toast(e.response?.data || 'Erreur lors de la création', 'error'); }
     finally { setLoading(false); }
   }
@@ -85,6 +103,8 @@ export default function Rendezvous() {
     finally { setLoading(false); }
   }
 
+  const patientName = id => { const p = patients.find(x => x.id === id); return p ? `${p.prenom} ${p.nom}` : `#${id}`; };
+  const medecinName = id => { const m = medecins.find(x => x.id === id); return m ? `Dr. ${m.prenom} ${m.nom}` : `#${id}`; };
   const counts = { EN_ATTENTE: 0, CONFIRME: 0, ANNULE: 0, TERMINE: 0 };
   rdvs.forEach(r => { if (counts[r.statut] !== undefined) counts[r.statut]++; });
   const f = v => v || '—';
@@ -93,10 +113,7 @@ export default function Rendezvous() {
     <div>
       <ToastContainer toasts={toasts} />
       <div className="page-header">
-        <div className="page-title">
-          <h1>Rendez-vous</h1>
-          <p>Gérer les consultations et leur suivi</p>
-        </div>
+        <div className="page-title"><h1>Rendez-vous</h1><p>Gérer les consultations et leur suivi</p></div>
         <div className="header-actions">
           <button className="btn btn-ghost" onClick={load}>🔄 Actualiser</button>
           <button className="btn btn-primary" onClick={() => { setForm(EMPTY); setModal(true); }}>+ Nouveau RDV</button>
@@ -134,9 +151,9 @@ export default function Rendezvous() {
                 {filtered.map(r => (
                   <tr key={r.id}>
                     <td className="td-id">#{r.id}</td>
-                    <td><span className="badge badge-purple">Patient #{r.patientId}</span></td>
-                    <td><span className="badge badge-green">Médecin #{r.medecinId}</span></td>
-                    <td><span className="badge badge-blue">Créneau #{r.creneauId}</span></td>
+                    <td><span className="badge badge-purple">👤 {patientName(r.patientId)}</span></td>
+                    <td><span className="badge badge-green">🩺 {medecinName(r.medecinId)}</span></td>
+                    <td><span className="badge badge-blue">#{r.creneauId}</span></td>
                     <td style={{fontWeight:500,whiteSpace:'nowrap'}}>{r.dateHeureRendezvous?.replace('T',' ').slice(0,16)||'—'}</td>
                     <td style={{maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f(r.motif)}</td>
                     <td><span className={`badge ${STATUT_BADGE[r.statut]||'badge-gray'}`}>{STATUT_ICON[r.statut]} {r.statut}</span></td>
@@ -169,13 +186,30 @@ export default function Rendezvous() {
           </>}
         >
           <form id="rdv-form" onSubmit={submit}>
-            <div className="form-row">
-              <div className="form-group"><label>ID Patient *</label><input required type="number" min="1" value={form.patientId} onChange={e => setForm({...form, patientId: e.target.value})} placeholder="1" /></div>
-              <div className="form-group"><label>ID Médecin *</label><input required type="number" min="1" value={form.medecinId} onChange={e => setForm({...form, medecinId: e.target.value})} placeholder="1" /></div>
+            <div className="form-group">
+              <label>Patient *</label>
+              <select required value={form.patientId} onChange={e => setForm({...form, patientId: e.target.value})}>
+                <option value="">— Sélectionner un patient —</option>
+                {patients.map(p => <option key={p.id} value={p.id}>{p.prenom} {p.nom}</option>)}
+              </select>
             </div>
-            <div className="form-row">
-              <div className="form-group"><label>ID Créneau *</label><input required type="number" min="1" value={form.creneauId} onChange={e => setForm({...form, creneauId: e.target.value})} placeholder="1" /></div>
-              <div className="form-group"><label>Date & Heure *</label><input required type="datetime-local" value={form.dateHeureRendezvous} onChange={e => setForm({...form, dateHeureRendezvous: e.target.value})} /></div>
+            <div className="form-group">
+              <label>Médecin *</label>
+              <select required value={form.medecinId} onChange={e => setForm({...form, medecinId: e.target.value})}>
+                <option value="">— Sélectionner un médecin —</option>
+                {medecins.map(m => <option key={m.id} value={m.id}>Dr. {m.prenom} {m.nom}{m.specialite ? ` — ${m.specialite.nom}` : ''}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Créneau disponible *</label>
+              <select required value={form.creneauId} onChange={e => setForm({...form, creneauId: e.target.value})}>
+                <option value="">— Sélectionner un créneau —</option>
+                {creneaux.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.date} — {c.heureDebut?.slice(0,5)} à {c.heureFin?.slice(0,5)} (Médecin #{c.medecinId})
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group"><label>Motif</label><input value={form.motif} onChange={e => setForm({...form, motif: e.target.value})} placeholder="Consultation générale..." /></div>
             <div className="form-group"><label>Notes</label><textarea rows={3} value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Notes additionnelles..." /></div>
@@ -195,8 +229,8 @@ export default function Rendezvous() {
           <div className="detail-grid">
             <div className="detail-item"><label>ID</label><span>#{viewModal.id}</span></div>
             <div className="detail-item"><label>Statut</label><span><span className={`badge ${STATUT_BADGE[viewModal.statut]||'badge-gray'}`}>{STATUT_ICON[viewModal.statut]} {viewModal.statut}</span></span></div>
-            <div className="detail-item"><label>Patient</label><span>#{viewModal.patientId}</span></div>
-            <div className="detail-item"><label>Médecin</label><span>#{viewModal.medecinId}</span></div>
+            <div className="detail-item"><label>Patient</label><span>{patientName(viewModal.patientId)}</span></div>
+            <div className="detail-item"><label>Médecin</label><span>{medecinName(viewModal.medecinId)}</span></div>
             <div className="detail-item"><label>Créneau</label><span>#{viewModal.creneauId}</span></div>
             <div className="detail-item"><label>Date & Heure</label><span>{viewModal.dateHeureRendezvous?.replace('T',' ')}</span></div>
             <div className="detail-item"><label>Date création</label><span>{viewModal.dateCreation?.replace('T',' ')}</span></div>

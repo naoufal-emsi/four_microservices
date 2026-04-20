@@ -9,6 +9,7 @@ const EMPTY = { medecinId: '', date: '', heureDebut: '', heureFin: '', disponibl
 export default function Planning() {
   const [creneaux, setCreneaux] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const [medecins, setMedecins] = useState([]);
   const [filterDispo, setFilterDispo] = useState('');
   const [filterMedecin, setFilterMedecin] = useState('');
   const [modal, setModal] = useState(false);
@@ -21,9 +22,13 @@ export default function Planning() {
   const { toasts, toast } = useToast();
 
   const { getApi } = useConfig();
-  const api = (path = '') => getApi('planning', path);
+  const api    = (path = '') => getApi('planning', path);
+  const apiMed = (path = '') => getApi('medecins', path);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    axios.get(apiMed()).then(r => setMedecins(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+  }, []);
   useEffect(() => {
     setFiltered(creneaux.filter(c => {
       const matchDispo = filterDispo === '' ? true : filterDispo === 'true' ? c.disponible : !c.disponible;
@@ -81,7 +86,7 @@ export default function Planning() {
     } catch { toast('Erreur', 'error'); }
   }
 
-  const disponibles = creneaux.filter(c => c.disponible).length;
+  const medecinName = id => { const m = medecins.find(x => x.id === id || x.id === Number(id)); return m ? `Dr. ${m.prenom} ${m.nom}` : `Médecin #${id}`; };
   const occupes = creneaux.filter(c => !c.disponible).length;
   const medecinIds = [...new Set(creneaux.map(c => c.medecinId).filter(Boolean))];
   const f = v => v || '—';
@@ -119,7 +124,7 @@ export default function Planning() {
           </select>
           <select className="filter-select" value={filterMedecin} onChange={e => { setFilterMedecin(e.target.value); if (e.target.value) loadByMedecin(e.target.value); else load(); }}>
             <option value="">Tous les médecins</option>
-            {medecinIds.map(id => <option key={id} value={id}>Médecin #{id}</option>)}
+            {medecins.map(m => <option key={m.id} value={m.id}>Dr. {m.prenom} {m.nom}</option>)}
           </select>
         </div>
         <div className="table-wrap">
@@ -132,7 +137,7 @@ export default function Planning() {
                 {filtered.map(c => (
                   <tr key={c.id}>
                     <td className="td-id">#{c.id}</td>
-                    <td><span className="badge badge-blue">Médecin #{c.medecinId}</span></td>
+                    <td><span className="badge badge-blue">{medecinName(c.medecinId)}</span></td>
                     <td style={{ fontWeight: 500 }}>{f(c.date)}</td>
                     <td>{f(c.heureDebut)}</td>
                     <td>{f(c.heureFin)}</td>
@@ -165,7 +170,13 @@ export default function Planning() {
           </>}
         >
           <form id="creneau-form" onSubmit={submit}>
-            <div className="form-group"><label>ID Médecin *</label><input required type="number" min="1" value={form.medecinId} onChange={e => setForm({ ...form, medecinId: e.target.value })} placeholder="1" /></div>
+            <div className="form-group">
+              <label>Médecin *</label>
+              <select required value={form.medecinId} onChange={e => setForm({ ...form, medecinId: e.target.value })}>
+                <option value="">— Sélectionner un médecin —</option>
+                {medecins.map(m => <option key={m.id} value={m.id}>Dr. {m.prenom} {m.nom}{m.specialite ? ` — ${m.specialite.nom}` : ''}</option>)}
+              </select>
+            </div>
             <div className="form-group"><label>Date *</label><input required type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
             <div className="form-row">
               <div className="form-group"><label>Heure début *</label><input required type="time" value={form.heureDebut} onChange={e => setForm({ ...form, heureDebut: e.target.value + ':00' })} /></div>
@@ -195,7 +206,7 @@ export default function Planning() {
         >
           <div className="detail-grid">
             <div className="detail-item"><label>ID</label><span>#{viewModal.id}</span></div>
-            <div className="detail-item"><label>Médecin</label><span>#{viewModal.medecinId}</span></div>
+            <div className="detail-item"><label>Médecin</label><span>{medecinName(viewModal.medecinId)}</span></div>
             <div className="detail-item"><label>Date</label><span>{f(viewModal.date)}</span></div>
             <div className="detail-item"><label>Disponibilité</label><span><span className={`badge ${viewModal.disponible ? 'badge-green' : 'badge-red'}`}>{viewModal.disponible ? '🟢 Disponible' : '🔴 Réservé'}</span></span></div>
             <div className="detail-item"><label>Heure début</label><span>{f(viewModal.heureDebut)}</span></div>
