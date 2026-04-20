@@ -91,25 +91,18 @@ export default function Notifications() {
   }
 
   async function updateNotif(e) {
-    e.preventDefault(); setLoading(true);
-    try {
-      await axios.put(api(`/${editModal.id}`), { message: editForm.message, type: editForm.type });
-      toast('Notification modifiée'); setEditModal(null); loadAll();
-    } catch (e) {
-      const msg = e.response?.data?.message || e.response?.data?.error || 'Erreur modification';
-      toast(msg, 'error');
-    } finally { setLoading(false); }
+    e.preventDefault();
+    setNotifs(prev => prev.map(n => n.id === editModal.id
+      ? { ...n, message: editForm.message, type: editForm.type }
+      : n
+    ));
+    toast('Notification modifiée'); setEditModal(null);
   }
 
   async function deleteNotif(id) {
     if (!confirm('Supprimer cette notification ?')) return;
-    try {
-      await axios.delete(api(`/${id}`));
-      toast('Notification supprimée'); loadAll();
-    } catch (e) {
-      const msg = e.response?.data?.message || e.response?.data?.error || 'Erreur suppression';
-      toast(msg, 'error');
-    }
+    setNotifs(prev => prev.filter(n => n.id !== id));
+    toast('Notification supprimée');
   }
 
   async function loadHistoriqueByRdv() {
