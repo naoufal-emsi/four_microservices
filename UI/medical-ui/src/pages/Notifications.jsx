@@ -29,6 +29,8 @@ export default function Notifications() {
   const [search, setSearch] = useState('');
   const [viewModal, setViewModal] = useState(null);
   const [createModal, setCreateModal] = useState(false);
+  const [editModal, setEditModal] = useState(null);
+  const [editForm, setEditForm] = useState({ message: '', type: '' });
   const [rdvFilter, setRdvFilter] = useState('');
   const [patientFilter, setPatientFilter] = useState('');
   const [form, setForm] = useState({ message: '', type: 'CREATE', rendezVousId: '', patientId: '' });
@@ -58,8 +60,12 @@ export default function Notifications() {
 
   async function loadAll() {
     try {
-      const res = await axios.get(api());
-      setNotifs(Array.isArray(res.data) ? res.data : []);
+      const [notifRes, histRes] = await Promise.all([
+        axios.get(api()),
+        axios.get(api('/historique')).catch(() => ({ data: [] }))
+      ]);
+      setNotifs(Array.isArray(notifRes.data) ? notifRes.data : []);
+      setHistorique(Array.isArray(histRes.data) ? histRes.data : []);
     } catch { toast('Impossible de contacter notifications-service', 'error'); }
   }
 
@@ -82,6 +88,16 @@ export default function Notifications() {
       toast('Notification créée'); setCreateModal(false); setForm({ message: '', type: 'CREATE', rendezVousId: '', patientId: '' }); loadAll();
     } catch (e) { toast(e.response?.data || 'Erreur', 'error'); }
     finally { setLoading(false); }
+  }
+
+  async function updateNotif(e) {
+    e.preventDefault();
+    // Update locally since backend doesn't support PUT yet
+    setNotifs(prev => prev.map(n => n.id === editModal.id
+      ? { ...n, message: editForm.message, type: editForm.type }
+      : n
+    ));
+    toast('Notification modifiée (local)'); setEditModal(null);
   }
 
   async function loadHistoriqueByRdv() {
@@ -136,7 +152,7 @@ export default function Notifications() {
         <div className="stat-card"><div className="stat-icon purple">🔔</div><div className="stat-info"><div className="stat-number">{notifs.length}</div><div className="stat-label">Notifications</div></div></div>
         <div className="stat-card"><div className="stat-icon green">📅</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'CREATE' || n.type === 'RDV_CREE').length}</div><div className="stat-label">Créations</div></div></div>
         <div className="stat-card"><div className="stat-icon red">❌</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'CANCEL' || n.type === 'RDV_ANNULE').length}</div><div className="stat-label">Annulations</div></div></div>
-        <div className="stat-card"><div className="stat-icon blue">🔄</div><div className="stat-info"><div className="stat-number">{notifs.filter(n => n.type === 'UPDATE' || n.type === 'RDV_STATUT_CHANGE' || n.type === 'RDV_NOTES_MODIFIEES').length}</div><div className="stat-label">Mises à jour</div></div></div>
+        <div className="stat-card"><div className="stat-icon blue">📜</div><div className="stat-info"><div className="stat-number">{historique.length}</div><div className="stat-label">Historique</div></div></div>
       </div>
 
       {/* Search by reference */}
@@ -192,7 +208,8 @@ export default function Notifications() {
                     <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</td>
                     <td>{n.rendezVousId ? <span className="badge badge-purple">#{n.rendezVousId}</span> : '—'}</td>
                     <td style={{ fontSize: '0.8rem', color: '#64748b', whiteSpace: 'nowrap' }}>{n.date ? new Date(n.date).toLocaleString('fr-FR') : '—'}</td>
-                    <td><button className="btn btn-ghost btn-sm" onClick={() => setViewModal({ ...n, _type: 'notif' })}>👁</button></td>
+                    <td><button className="btn btn-ghost btn-sm" onClick={() => setViewModal({ ...n, _type: 'notif' })}>👁</button>
+                    <button className="btn btn-warning btn-sm" onClick={() => { setEditModal(n); setEditForm({ message: n.message, type: n.type }); }}>✏️</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -270,6 +287,35 @@ export default function Notifications() {
             <div className="detail-item"><label>Date</label><span>{viewModal.date ? new Date(viewModal.date).toLocaleString('fr-FR') : '—'}</span></div>
           </div>
           {viewModal.message && <><div className="divider" /><div className="detail-item"><label>Message</label><p style={{ marginTop: 6, fontSize: '0.9rem', lineHeight: 1.6 }}>{viewModal.message}</p></div></>}
+        </Modal>
+      )}
+      {/* Edit Modal */}
+      {editModal && (
+        <Modal title={`✏️ Modifier notification #${editModal.id}`} onClose={() => setEditModal(null)}
+          footer={<>
+            <button className="btn btn-ghost" onClick={() => setEditModal(null)}>Annuler</button>
+            <button className="btn btn-primary" form="edit-notif-form" type="submit" disabled={loading}>
+              {loading ? <span className="loading-spinner" /> : 'Enregistrer'}
+            </button>
+          </>}
+        >
+          <form id="edit-notif-form" onSubmit={updateNotif}>
+            <div className="form-group">
+              <label>Message *</label>
+              <textarea required rows={3} value={editForm.message} onChange={e => setEditForm({ ...editForm, message: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label>Type *</label>
+              <select value={editForm.type} onChange={e => setEditForm({ ...editForm, type: e.target.value })}>
+                <option value="CREATE">📅 CREATE</option>
+                <option value="CANCEL">❌ CANCEL</option>
+                <option value="UPDATE">🔄 UPDATE</option>
+                <option value="RDV_CREE">📅 RDV_CREE</option>
+                <option value="RDV_ANNULE">❌ RDV_ANNULE</option>
+                <option value="RDV_STATUT_CHANGE">🔄 RDV_STATUT_CHANGE</option>
+              </select>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

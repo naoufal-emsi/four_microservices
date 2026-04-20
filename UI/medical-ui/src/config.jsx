@@ -22,12 +22,13 @@ const ConfigContext = createContext(null);
 
 export function ConfigProvider({ children }) {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [configLoaded, setConfigLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/config')
       .then(r => r.json())
-      .then(setConfig)
-      .catch(() => {});
+      .then(d => { setConfig(d); setConfigLoaded(true); })
+      .catch(() => setConfigLoaded(true));
   }, []);
 
   async function updateConfig(newConfig) {
@@ -49,7 +50,7 @@ export function ConfigProvider({ children }) {
   }
 
   return (
-    <ConfigContext.Provider value={{ config, updateConfig, getApi }}>
+    <ConfigContext.Provider value={{ config, configLoaded, updateConfig, getApi }}>
       {children}
     </ConfigContext.Provider>
   );

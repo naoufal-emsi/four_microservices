@@ -18,10 +18,11 @@ const NAV = [
 ];
 
 function Sidebar() {
-  const { config } = useConfig();
+  const { config, configLoaded } = useConfig();
   const [status, setStatus] = useState({});
 
   useEffect(() => {
+    if (!configLoaded) return;
     async function pingAll() {
       const results = {};
       await Promise.all(NAV.map(async n => {
@@ -35,12 +36,10 @@ function Sidebar() {
       }));
       setStatus(results);
     }
-    if (Object.keys(config).length) pingAll();
-    const interval = setInterval(() => {
-      if (Object.keys(config).length) pingAll();
-    }, 30000);
+    pingAll();
+    const interval = setInterval(pingAll, 30000);
     return () => clearInterval(interval);
-  }, [config]);
+  }, [config, configLoaded]);
 
   const allOk = NAV.every(n => status[n.service] === 'ok');
   const anyOk = NAV.some(n => status[n.service] === 'ok');

@@ -53,4 +53,9 @@ public class NotificationController {
     public List<Historique> getHistoriqueByPatient(@PathVariable Long id) {
         return service.getHistoriqueByPatient(id);
     }
+
+    @GetMapping("/historique")
+    public List<Historique> getAllHistorique() {
+        return service.getAllHistorique();
+    }
 }

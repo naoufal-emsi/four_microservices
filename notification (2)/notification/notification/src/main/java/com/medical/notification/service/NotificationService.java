@@ -59,4 +59,8 @@ public class NotificationService {
     public List<Historique> getHistoriqueByRendezVous(Long id) {
         return historiqueRepository.findByRendezVousId(id);
     }
+
+    public List<Historique> getAllHistorique() {
+        return historiqueRepository.findAll();
+    }
 }
