@@ -75,6 +75,22 @@ public class MicroserviceClient {
         }
     }
 
+    public void occuperMedecin(Long medecinId) {
+        try {
+            restTemplate.put(medecinsUrl + "/medecins/" + medecinId + "/occuper", null);
+        } catch (Exception e) {
+            System.err.println("[WARN] medecins-service unreachable, could not mark medecin occupé: " + e.getMessage());
+        }
+    }
+
+    public void libererMedecin(Long medecinId) {
+        try {
+            restTemplate.put(medecinsUrl + "/medecins/" + medecinId + "/liberer", null);
+        } catch (Exception e) {
+            System.err.println("[WARN] medecins-service unreachable, could not liberate medecin: " + e.getMessage());
+        }
+    }
+
     public void envoyerNotification(String type, String message, Long rendezVousId, Long patientId) {
         try {
             Map<String, Object> payload = new HashMap<>();
