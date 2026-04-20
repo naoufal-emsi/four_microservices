@@ -1,22 +1,7 @@
 {
-  "patients": {
-    "ip": "localhost",
-    "port": "8081"
-  },
-  "medecins": {
-    "ip": "localhost",
-    "port": "8085"
-  },
-  "planning": {
-    "ip": "192.168.1.36",
-    "port": "9090"
-  },
-  "rendezvous": {
-    "ip": "localhost",
-    "port": "8083"
-  },
-  "notifications": {
-    "ip": "localhost",
-    "port": "8086"
-  }
+  "patients":      { "ip": "192.168.1.35", "port": "8081" },
+  "medecins":      { "ip": "192.168.1.35", "port": "8085" },
+  "planning":      { "ip": "192.168.1.36", "port": "9090" },
+  "rendezvous":    { "ip": "192.168.1.35", "port": "8083" },
+  "notifications": { "ip": "192.168.1.35", "port": "8086" }
 }
