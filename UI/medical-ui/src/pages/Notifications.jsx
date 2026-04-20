@@ -33,20 +33,23 @@ export default function Notifications() {
   const [editForm, setEditForm] = useState({ message: '', type: '' });
   const [rdvFilter, setRdvFilter] = useState('');
   const [patientFilter, setPatientFilter] = useState('');
-  const [form, setForm] = useState({ message: '', type: 'CREATE', rendezVousId: '', patientId: '' });
+  const [form, setForm] = useState({ message: '', type: 'CREATE', rendezVousId: '', patientId: '', medecinId: '' });
   const [loading, setLoading] = useState(false);
   const { toasts, toast } = useToast();
   const [patients, setPatients] = useState([]);
+  const [medecins, setMedecins] = useState([]);
   const [rdvs, setRdvs] = useState([]);
 
   const { getApi } = useConfig();
   const api    = (path = '') => getApi('notifications', path);
   const apiPat = (path = '') => getApi('patients', path);
+  const apiMed = (path = '') => getApi('medecins', path);
   const apiRdv = (path = '') => getApi('rendezvous', path);
 
   useEffect(() => {
     loadAll();
     axios.get(apiPat()).then(r => setPatients(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    axios.get(apiMed()).then(r => setMedecins(Array.isArray(r.data) ? r.data : [])).catch(() => {});
     axios.get(apiRdv()).then(r => setRdvs(Array.isArray(r.data) ? r.data : [])).catch(() => {});
   }, []);
   useEffect(() => {
@@ -84,8 +87,9 @@ export default function Notifications() {
         type: form.type,
         rendezVousId: form.rendezVousId ? Number(form.rendezVousId) : null,
         patientId: form.patientId ? Number(form.patientId) : null,
+        medecinId: form.medecinId ? Number(form.medecinId) : null,
       });
-      toast('Notification créée'); setCreateModal(false); setForm({ message: '', type: 'CREATE', rendezVousId: '', patientId: '' }); loadAll();
+      toast('Notification créée'); setCreateModal(false); setForm({ message: '', type: 'CREATE', rendezVousId: '', patientId: '', medecinId: '' }); loadAll();
     } catch (e) { toast(e.response?.data || 'Erreur', 'error'); }
     finally { setLoading(false); }
   }
@@ -271,12 +275,19 @@ export default function Notifications() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Rendez-vous</label>
-                <select value={form.rendezVousId} onChange={e => setForm({ ...form, rendezVousId: e.target.value })}>
-                  <option value="">— Sélectionner un RDV —</option>
-                  {rdvs.map(r => <option key={r.id} value={r.id}>RDV #{r.id} — {r.dateHeureRendezvous?.slice(0,16).replace('T',' ')}</option>)}
+                <label>Médecin</label>
+                <select value={form.medecinId} onChange={e => setForm({ ...form, medecinId: e.target.value })}>
+                  <option value="">— Sélectionner un médecin —</option>
+                  {medecins.map(m => <option key={m.id} value={m.id}>Dr. {m.prenom} {m.nom}</option>)}
                 </select>
               </div>
+            </div>
+            <div className="form-group">
+              <label>Rendez-vous</label>
+              <select value={form.rendezVousId} onChange={e => setForm({ ...form, rendezVousId: e.target.value })}>
+                <option value="">— Sélectionner un RDV —</option>
+                {rdvs.map(r => <option key={r.id} value={r.id}>RDV #{r.id} — {r.dateHeureRendezvous?.slice(0,16).replace('T',' ')}</option>)}
+              </select>
             </div>
           </form>
         </Modal>
